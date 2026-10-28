@@ -178,13 +178,13 @@
     - 讨论记录（2026-10-27）：核对 Velopack 稳定版 1.2.161：MSI 的 `Either` 仅选择当前用户/所有用户安装范围，默认向导未接入任意目录选择；`VELOPACK_INSTALLDIR` 支持通过参数指定路径，尚不能替代本条的图形交互要求，因此保留现有安装引导方案。依据：[安装文档](https://docs.velopack.io/packaging/installer)、[安装范围页面](https://github.com/velopack/velopack/blob/1.2.161/src/vpk/Velopack.Packaging.Windows/Msi/Templates/InstallScopeDlg.wxs)、[向导流程与目录设置](https://github.com/velopack/velopack/blob/1.2.161/src/vpk/Velopack.Packaging.Windows/Msi/Templates/MsiTemplate.hbs#L315-L365)。实现时对选定工具版本做实际安装验收，不把“支持 MSI”视为自带目录选择页。
     - 决定记录（2026-10-27）：用户确认采用「NSIS 安装引导 + Velopack 自动更新」。以 NSIS 落实原轻量引导方案，保留 Velopack 安装布局和更新协议；不增加自行维护的 MSI 或另一套更新实现。依据：[NSIS Modern UI](https://nsis.sourceforge.io/Docs/Modern%20UI%202/Readme.html)、[Velopack Setup 参数](https://docs.velopack.io/reference/cli/content/setup-windows)。
 
-- [ ] **实现不打断转写任务的应用自动更新**
-    - [ ] 由托盘应用调用 Velopack SDK / GithubSource 检查、下载更新并查看发布说明，在下载完成后等待安全更新时机；没有新版本或暂时无法访问 GitHub 时仍可正常提供 API。
-    - [ ] 自动更新消费 Velopack 更新包与索引，由其更新器应用更新；不重新运行 NSIS 安装向导，不下载 NSIS EXE 作为自动更新载荷，不重设安装路径。安装版与绿色版共用更新机制并保留各自模式。
-    - [ ] 应用更新前暂停领取新任务，等待正在转写的任务完成并持久化队列，退出推理 Worker 后再更新和重启；长任务收尾不放入有短超时限制的安装更新钩子。
-    - [ ] 更新期间明确显示状态及 API 短暂不可用；重启后恢复待处理任务，避免重复提交已完成结果。
-    - [ ] 下载失败、包校验失败或更新无法应用时给出可诊断结果，不丢失配置、模型和队列，也不把未成功更新显示为成功。
-    - [ ] 正式版默认仅接收对应架构和通道的正式更新；安装版与绿色版升级后保持原发行形式及路径。
+- [x] **实现不打断转写任务的应用自动更新**
+    - [x] 由托盘应用调用 Velopack SDK / GithubSource 检查、下载更新并查看发布说明，在下载完成后等待安全更新时机；没有新版本或暂时无法访问 GitHub 时仍可正常提供 API。
+    - [x] 自动更新消费 Velopack 更新包与索引，由其更新器应用更新；不重新运行 NSIS 安装向导，不下载 NSIS EXE 作为自动更新载荷，不重设安装路径。安装版与绿色版共用更新机制并保留各自模式。
+    - [x] 应用更新前暂停领取新任务，等待正在转写的任务完成并持久化队列，退出推理 Worker 后再更新和重启；长任务收尾不放入有短超时限制的安装更新钩子。
+    - [x] 更新期间明确显示状态及 API 短暂不可用；重启后恢复待处理任务，避免重复提交已完成结果。
+    - [x] 下载失败、包校验失败或更新无法应用时给出可诊断结果，不丢失配置、模型和队列，也不把未成功更新显示为成功。
+    - [x] 正式版默认仅接收对应架构和通道的正式更新；安装版与绿色版升级后保持原发行形式及路径。
     - 验收：分别在安装版、绿色版上验证空闲更新、转写期间更新、网络中断和损坏更新包；确认安全退出 Worker、版本变更及任务恢复行为；更新过程中不弹出 NSIS 或路径选择页面，更新后仍只有原卸载记录和启动入口。
     - Blocked by: 生成支持自更新的安装版与绿色版产物
 

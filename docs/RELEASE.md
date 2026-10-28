@@ -53,4 +53,6 @@ AiLocalApi.Verify.exe --release "T:\绿色 中文" "T:\绿色 中文\Data" C:\In
 
 该命令为自动化测试准备独立数据配置和模型，不能替代首次运行窗口验收。它验证真实转写、单实例、长转写期间升级、排队任务恢复、数据与模式保持、稳定自启路径及正常退出。另需检查空闲更新、断网/损坏包、绿色目录移动、安装版卸载记录与快捷方式，并保留真实结果；未运行的场景不能视为通过。
 
+加 `--idle-update` 验证空闲升级；将目标版本改成 `failure` 可验证不可达源或损坏包。`failure <0.1.1 本地资产目录> --interrupt-feed` 会提供 0.1.2 测试索引并在包传输途中重置 TCP 连接，确认失败后旧版本仍能转写。移动副本后使用 `--existing` 验证原模型与历史路径迁移，不重新导入掩盖路径错误。
+
 SDK API 与打包参数依据 [Velopack Setup 参数](https://docs.velopack.io/reference/cli/content/setup-windows)、固定 1.2.161 NuGet XML API 文档及实际 `vpk pack --help`；目录页依据 [NSIS Modern UI](https://nsis.sourceforge.io/Docs/Modern%20UI%202/Readme.html)。

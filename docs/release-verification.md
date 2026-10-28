@@ -18,5 +18,7 @@
 - 重复 NSIS 安装返回 2，拒绝覆盖或降级。原安装升级后系统仍为一条 0.1.1 卸载记录，原目录不变；NSIS 临时 Payload.exe 无残留。由系统记录中的 Update.exe 卸载返回 0，卸载记录不存在、自身 Run 项已删除，外部数据库和 ggml-tiny.bin 均保留。证据：`upgraded-registry.json`、`uninstall-result.json`。
 - 不可写的 Sandbox 只读映射目标被拒绝，返回 2。替换内嵌载荷为无法独立运行的测试 apphost，模拟内层安装失败，外层返回 1，没有卸载记录；未显示安装成功。证据：`readonly-install-exit.txt`、`failed-inner-exit.txt`、`failed-inner-registry.txt`。
 - 图形目录页点击取消并确认退出，回到 Sandbox 桌面；默认安装目录与卸载记录均不存在。卸载后开始菜单快捷方式为 0、Worker 为 0，另一绿色副本的 Run 项保持原路径。证据：`cancel-and-cleanup.json`。
+- 全新安装与解压副本分别在无排队、无运行任务时完成 0.1.0 → 0.1.1 升级，保留模型、配置和历史结果，升级后再次转写通过。证据：`installed-idle.txt`、`portable-idle.txt`。
+- 两种模式均由测试 TCP 服务提供有效更新索引，在 nupkg 开始传输 4096 字节后重置连接；确认实际包下载被中断、更新失败被记录，旧版 0.1.1 继续接单且再次转写成功。证据：`installed-interrupted.txt`、`portable-interrupted.txt`。该场景独立于完整损坏包与连接拒绝。
 
 GitHub 在线发布的结果在实际验收后追加。本地升级不替代在线更新验收。

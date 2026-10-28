@@ -10,6 +10,7 @@ if (reportIndex >= 0)
     var output = new StreamWriter(report) { AutoFlush = true }; Console.SetOut(output); Console.SetError(output);
     AppDomain.CurrentDomain.UnhandledException += (_, e) => { Console.Error.WriteLine(e.ExceptionObject); output.Flush(); };
 }
+if (args.Length >= 7 && args[0] == "--release") { await ReleaseRegression.RunAsync(args); return 0; }
 if (args.Length >= 4 && args[0] == "--http") { await HttpRegression.RunAsync(args[1], args[2], args[3], args.Contains("--lock")); return 0; }
 if (args.Length >= 1 && args[0] == "--sandbox-drive")
 {
