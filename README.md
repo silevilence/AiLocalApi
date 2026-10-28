@@ -2,6 +2,8 @@
 
 Windows 11 x64 本地语音转写托盘应用。开发不需要安装包、Release、Python、Docker 或 Whisper/FFmpeg CLI。
 
+统一入口：`scripts/dev.ps1` 启动开发实例，`scripts/test.ps1` 构建并测试，`scripts/publish.ps1` 发布自包含输出，`scripts/pack.ps1` 生成 NSIS / Velopack 双形态产物。固定工具、数据布局、更新策略及 Sandbox 验收命令见 [发行指南](docs/RELEASE.md)。
+
 安装 .NET SDK **10.0.301** 后，在仓库执行：
 
 ```powershell
