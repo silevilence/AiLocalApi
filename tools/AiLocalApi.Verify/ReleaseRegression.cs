@@ -27,6 +27,7 @@ internal static class ReleaseRegression
         if (firstRun) Check(run.GetValue(startup) is null, "startup is opt-in");
         var launch = new ProcessStartInfo(executable, "--tray") { UseShellExecute = false, CreateNoWindow = true };
         launch.Environment.Remove("AILOCAL_DATA"); launch.Environment["AILOCAL_DISABLE_UPDATE_CHECK"] = "1";
+        if (args.Contains("--automatic-update")) launch.Environment.Remove("AILOCAL_DISABLE_UPDATE_CHECK");
         using var interrupted = args.Contains("--interrupt-feed") ? new InterruptedUpdateSource(args[8]) : null;
         if (args.Length > 8 && !args[8].StartsWith("--")) launch.Environment["AILOCAL_UPDATE_SOURCE"] = interrupted?.Url ?? args[8];
         using var process = Process.Start(launch)!;
@@ -73,7 +74,12 @@ internal static class ReleaseRegression
                     Check(store.Job(active)?.State == "running", "transcription running when update requested");
                 }
                 else Check(store.Jobs().All(job => job.State is not ("queued" or "running")), "idle when update requested");
-                using (var trigger = Process.Start(new ProcessStartInfo(executable, "--update") { UseShellExecute = false, CreateNoWindow = true })!) await trigger.WaitForExitAsync();
+                if (!args.Contains("--automatic-update"))
+                {
+                    using var trigger = Process.Start(new ProcessStartInfo(executable, "--update") { UseShellExecute = false, CreateNoWindow = true })!;
+                    await trigger.WaitForExitAsync();
+                }
+                else Console.WriteLine("Waiting for the application's automatic startup check; no update command sent.");
                 Check((await Version(http, args[7])).GetProperty("mode").GetString() == mode, "mode preserved after update");
                 if (active is not null && queued is not null)
                 {
