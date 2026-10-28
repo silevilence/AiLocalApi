@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory)][ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version,
     [string]$OutputDirectory,
     [string]$UpdateSource = 'https://github.com/silevilence/AiLocalApi',
-    [string]$VcRedist = 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Redist\MSVC\14.44.35112\x64'
+    [string]$VcRedist
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -10,6 +10,7 @@ if (!$OutputDirectory) { $OutputDirectory = "$root/artifacts/publish/$Version" }
 $OutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
 if (Test-Path -LiteralPath $OutputDirectory) { throw "Output already exists; select a new empty output directory: $OutputDirectory" }
 if ((dotnet --version) -ne '10.0.301') { throw 'SDK 10.0.301 required' }
+if (!$VcRedist) { $VcRedist = & "$PSScriptRoot/setup-redist.ps1" }
 foreach ($group in 'Microsoft.VC143.CRT', 'Microsoft.VC143.OPENMP') {
     if (!(Test-Path -LiteralPath "$VcRedist/$group")) { throw "Missing redistributable: $VcRedist/$group" }
 }

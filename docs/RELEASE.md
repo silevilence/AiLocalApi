@@ -13,7 +13,7 @@ dotnet restore AiLocalApi.slnx --locked-mode
 
 ## 固定工具与本地产物
 
-工具版本见 `global.json`、`.config/dotnet-tools.json`、`packaging/tools.json` 和 `Directory.Packages.props`：Velopack SDK/CLI 1.2.161、NSIS 3.12、MSVC CRT/OpenMP 14.44.35112。NSIS 编译器默认位于 `C:/Program Files (x86)/NSIS/makensis.exe`，可用 `-MakeNsis` 指定同版本路径。MSVC 运行库目录通过 `-VcRedist` 提供；发行物包含这些可分发 DLL，不要求用户安装 SDK、编译器或 FFmpeg 命令行。
+工具版本见 `global.json`、`.config/dotnet-tools.json`、`packaging/tools.json` 和 `Directory.Packages.props`：Velopack SDK/CLI 1.2.161、NSIS 3.12、MSVC CRT/OpenMP 14.44.35211（目录布局 14.44.35112）。NSIS 编译器默认位于 `C:/Program Files (x86)/NSIS/makensis.exe`，可用 `-MakeNsis` 指定同版本路径。`setup-redist.ps1` 默认下载微软官方固定 VSIX，校验 SHA-256 后仅提取可分发的 x64 CRT/OpenMP；可用 `-VcRedist` 指定合法分发目录。发行物包含这些 DLL，不要求用户安装 SDK、编译器或 FFmpeg 命令行。
 
 ```powershell
 ./scripts/publish.ps1 -Version 0.1.0 -OutputDirectory artifacts/publish/test-01 -UpdateSource C:/ReleaseFeed
@@ -56,3 +56,13 @@ AiLocalApi.Verify.exe --release "T:\绿色 中文" "T:\绿色 中文\Data" C:\In
 加 `--idle-update` 验证空闲升级；将目标版本改成 `failure` 可验证不可达源或损坏包。`failure <0.1.1 本地资产目录> --interrupt-feed` 会提供 0.1.2 测试索引并在包传输途中重置 TCP 连接，确认失败后旧版本仍能转写。移动副本后使用 `--existing` 验证原模型与历史路径迁移，不重新导入掩盖路径错误。
 
 SDK API 与打包参数依据 [Velopack Setup 参数](https://docs.velopack.io/reference/cli/content/setup-windows)、固定 1.2.161 NuGet XML API 文档及实际 `vpk pack --help`；目录页依据 [NSIS Modern UI](https://nsis.sourceforge.io/Docs/Modern%20UI%202/Readme.html)。
+
+## GitHub 发布
+
+发布准备时执行 `generate-changelog` 技能，更新 `changelog.md` 和公共 `Directory.Build.props/Version`，提交后推送对应的 `vX.Y.Z` 标签。只有版本标签触发 `.github/workflows/release.yml`；普通开发提交不发布。
+
+Windows runner 复用上述测试、发布和打包脚本，执行真实模型的 CPU 转写、复用与卸载。构建作业只有 contents:read；独立发布作业使用 contents:write，在草稿中上传并校验全部四项资产的服务器 SHA-256 后公开。重复执行相同已发布标签时核对提交、正文和完整资产后跳过，不覆盖公开内容；失败的同提交草稿可以重试。首期始终提供完整更新包，不依赖增量包或旧版本存在。
+
+Release 正文与 Velopack 更新说明都由 `release-notes.ps1` 提取对应章节，Actions 不运行本机技能，也不自动生成另一份说明。可选签名通过 `pack.ps1` 参数接入，默认构建未签名。当前正式构建携带 CPU/Vulkan 库；CUDA 需另行启用 CUDA 构建依赖并在 NVIDIA 硬件上验收。
+
+默认更新源为本仓库 GitHub Releases。公开仓库匿名检查；私有仓库由运行用户显式提供进程环境变量 `AILOCAL_GITHUB_TOKEN`（至少具备该仓库 Contents 读取权限），程序只在运行时交给 GithubSource，不保存到配置或打包资产。CI 发布 token 不会注入应用；私有 Release 不等于匿名用户可下载。

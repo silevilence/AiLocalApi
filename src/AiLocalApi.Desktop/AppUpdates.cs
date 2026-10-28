@@ -26,7 +26,7 @@ public sealed class AppUpdates(ApplicationService service, Func<Task> exit)
             Source = Environment.GetEnvironmentVariable("AILOCAL_UPDATE_SOURCE") ?? config.RootElement.GetProperty("repository").GetString()!;
             var options = new UpdateOptions { ExplicitChannel = "win", AllowVersionDowngrade = false };
             var manager = Source.StartsWith("https://github.com/", StringComparison.OrdinalIgnoreCase)
-                ? new UpdateManager(new GithubSource(Source, null, false), options)
+                ? new UpdateManager(new GithubSource(Source, Environment.GetEnvironmentVariable("AILOCAL_GITHUB_TOKEN"), false), options)
                 : new UpdateManager(Source, options);
             Report("正在检查更新");
             var update = await manager.CheckForUpdatesAsync();

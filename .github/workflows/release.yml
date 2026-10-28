@@ -1,0 +1,106 @@
+name: Windows release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      published: ${{ steps.existing.outputs.published }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Validate tag, project version and release notes
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ($env:RELEASE_TAG -notmatch '^v(\d+\.\d+\.\d+)$') { throw 'Only stable vX.Y.Z tags are supported' }
+          $version = $Matches[1]
+          "version=$version" >> $env:GITHUB_OUTPUT
+          ./scripts/release-notes.ps1 -Version $version -OutputFile artifacts/notes.md
+          ./scripts/test-release-notes.ps1
+      - name: Check existing release without overwriting published assets
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/publish-github.ps1 -Version '${{ steps.version.outputs.version }}' -Repository $env:GITHUB_REPOSITORY -Commit $env:GITHUB_SHA -Notes artifacts/notes.md -CheckOnly
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        if: steps.existing.outputs.published != 'true'
+        with:
+          dotnet-version: '10.0.301'
+      - name: Install pinned packaging tool
+        if: steps.existing.outputs.published != 'true'
+        run: |
+          choco install nsis --version=3.12 --yes --no-progress
+          if ($LASTEXITCODE) { throw 'NSIS installation failed' }
+      - name: Restore and test
+        if: steps.existing.outputs.published != 'true'
+        run: |
+          dotnet restore AiLocalApi.slnx --locked-mode
+          if ($LASTEXITCODE) { throw 'Locked restore failed' }
+          ./scripts/test.ps1 -Configuration Release
+      - name: Self-contained publish and CPU inference
+        if: steps.existing.outputs.published != 'true'
+        run: |
+          ./scripts/publish.ps1 -Version '${{ steps.version.outputs.version }}' -OutputDirectory artifacts/publish/ci
+          ./scripts/ci-cpu.ps1 -PublishDirectory artifacts/publish/ci
+      - name: Pack Velopack and NSIS assets
+        if: steps.existing.outputs.published != 'true'
+        run: ./scripts/pack.ps1 -Version '${{ steps.version.outputs.version }}' -PublishDirectory artifacts/publish/ci -OutputDirectory artifacts/releases/ci -ReleaseNotes artifacts/notes.md
+      - name: Save complete release bundle
+        if: steps.existing.outputs.published != 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-bundle
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            artifacts/releases/ci/AiLocalApi-${{ steps.version.outputs.version }}-win-x64-Setup.exe
+            artifacts/releases/ci/AiLocalApi-win-Portable.zip
+            artifacts/releases/ci/AiLocalApi-${{ steps.version.outputs.version }}-full.nupkg
+            artifacts/releases/ci/releases.win.json
+            artifacts/releases/ci/assets.json
+            artifacts/notes.md
+      - name: Save diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: validation-results
+          path: |
+            artifacts/test-results/*.trx
+            artifacts/ci-cpu.txt
+
+  publish:
+    needs: build
+    if: needs.build.outputs.published != 'true'
+    runs-on: windows-2025
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-bundle
+          path: artifacts
+      - name: Upload draft, verify every digest, then publish
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/publish-github.ps1 -Version '${{ needs.build.outputs.version }}' -Repository $env:GITHUB_REPOSITORY -Commit $env:GITHUB_SHA -Notes artifacts/notes.md -Directory artifacts/releases/ci

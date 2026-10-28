@@ -2,6 +2,7 @@
   "velopack": "1.2.161",
   "nsis": "3.12",
   "vcRedist": "14.44.35112",
+  "vcRedistBinaryVersion": "14.44.35211",
   "packageId": "AiLocalApi",
   "channel": "win",
   "repository": "https://github.com/silevilence/AiLocalApi"

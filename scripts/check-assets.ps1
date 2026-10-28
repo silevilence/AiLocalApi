@@ -18,5 +18,18 @@ try {
     $reader = [IO.StreamReader]::new($zip.GetEntry('current/sq.version').Open())
     try { $spec = [xml]$reader.ReadToEnd() } finally { $reader.Dispose() }
     if ($spec.package.metadata.version -ne $Version) { throw 'Portable version mismatch' }
+    foreach ($assembly in 'current/AiLocalApi.Desktop.dll', 'current/worker/AiLocalApi.Worker.dll') {
+        $entry = $zip.GetEntry($assembly)
+        if (!$entry) { throw "Missing assembly: $assembly" }
+        $stream = $entry.Open(); $buffer = [IO.MemoryStream]::new()
+        try {
+            $stream.CopyTo($buffer); $buffer.Position = 0
+            $pe = [Reflection.PortableExecutable.PEReader]::new($buffer)
+            try {
+                $metadata = [Reflection.Metadata.PEReaderExtensions]::GetMetadataReader($pe)
+                if ($metadata.GetAssemblyDefinition().Version.ToString() -ne "$Version.0") { throw "Application version mismatch: $assembly" }
+            } finally { $pe.Dispose() }
+        } finally { $stream.Dispose(); $buffer.Dispose() }
+    }
 } finally { $zip.Dispose() }
-Write-Output "PASS: four Release assets, update digest, NSIS/portable version $Version and portable metadata"
+Write-Output "PASS: four Release assets, update digest, NSIS/portable/host/Worker version $Version and portable metadata"

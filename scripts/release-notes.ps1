@@ -14,5 +14,9 @@ $matching = @($chapters | Where-Object { $_.Groups[1].Value.Trim() -eq $plain })
 if ($matching.Count -ne 1) { throw "Expected exactly one changelog section for $plain" }
 $notes = $matching[0].Groups[2].Value.Trim()
 if ($notes -notmatch '(?m)^- \S') { throw "Empty release notes for $plain" }
-if ($OutputFile) { $notes | Set-Content -LiteralPath $OutputFile -Encoding utf8 }
+if ($OutputFile) {
+    $parent = Split-Path ([IO.Path]::GetFullPath($OutputFile)) -Parent
+    New-Item -ItemType Directory -Path $parent -Force | Out-Null
+    $notes | Set-Content -LiteralPath $OutputFile -Encoding utf8
+}
 else { Write-Output $notes }
