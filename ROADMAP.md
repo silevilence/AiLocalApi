@@ -105,12 +105,12 @@
     - 验收：客户端提交后立即得到任务 ID，通过轮询获取最终结果；取消、重试、错误输入及服务重启后的查询行为与接口文档一致。
     - Blocked by: 实现持久化任务队列与调度恢复
 
-- [ ] **提供 OpenAI Whisper 兼容转写与翻译接口**
-    - [ ] 实现 `POST /v1/audio/transcriptions` 和 `POST /v1/audio/translations`，接收 multipart `file`、`model` 及各接口适用的 `language`、`prompt`、`temperature`、`response_format` 参数；先覆盖 `json` 和 `text`。
-    - [ ] 兼容接口等待最终结果后返回，不返回异步任务 ID 或 `202`；与 `/api/jobs` 复用队列、模型生命周期和取消机制，明确请求超时及断连后的处理。
-    - [ ] `whisper-1` 作为可配置的本地默认模型别名，支持明确的本地模型 ID；公开别名对应关系，不声称本地输出与 OpenAI 托管模型完全一致。
-    - [ ] `/v1/audio/translations` 表示音频翻译为英文，校验所选模型的翻译能力；提供 `GET /v1/models` 展示可用本地模型及兼容别名。
-    - [ ] 使用兼容的错误响应，明确拒绝不支持的模型或参数；默认仅本机访问，提供 Bearer API key 配置及明确的访问边界。
+- [x] **提供 OpenAI Whisper 兼容转写与翻译接口**
+    - [x] 实现 `POST /v1/audio/transcriptions` 和 `POST /v1/audio/translations`，接收 multipart `file`、`model` 及各接口适用的 `language`、`prompt`、`temperature`、`response_format` 参数；先覆盖 `json` 和 `text`。
+    - [x] 兼容接口等待最终结果后返回，不返回异步任务 ID 或 `202`；与 `/api/jobs` 复用队列、模型生命周期和取消机制，明确请求超时及断连后的处理。
+    - [x] `whisper-1` 作为可配置的本地默认模型别名，支持明确的本地模型 ID；公开别名对应关系，不声称本地输出与 OpenAI 托管模型完全一致。
+    - [x] `/v1/audio/translations` 表示音频翻译为英文，校验所选模型的翻译能力；提供 `GET /v1/models` 展示可用本地模型及兼容别名。
+    - [x] 使用兼容的错误响应，明确拒绝不支持的模型或参数；默认仅本机访问，提供 Bearer API key 配置及明确的访问边界。
     - 验收：使用官方 SDK 配置本地 base URL 完成中英文转写和非英语音频到英文的翻译；验证 json/text、错误响应、并发排队及超时行为。
     - Blocked by: 提供异步转写任务 API
 
