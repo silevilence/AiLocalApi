@@ -1,0 +1,54 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="using:AiLocalApi.Desktop" x:Class="AiLocalApi.Desktop.MainWindow" x:DataType="local:MainViewModel" Title="AiLocalApi · 本地语音工作台" Width="1080" Height="760" MinWidth="820" MinHeight="620" Background="#F5F7F8" FontFamily="Microsoft YaHei UI, Segoe UI">
+  <Window.Styles>
+    <Style Selector="Button"><Setter Property="MinHeight" Value="36"/><Setter Property="Padding" Value="14,7"/></Style>
+    <Style Selector="Button.primary"><Setter Property="Background" Value="#0F766E"/><Setter Property="Foreground" Value="White"/></Style>
+    <Style Selector="TextBlock.label"><Setter Property="Foreground" Value="#475569"/><Setter Property="FontSize" Value="13"/></Style>
+    <Style Selector="TextBox"><Setter Property="MinHeight" Value="36"/></Style>
+  </Window.Styles>
+  <Grid RowDefinitions="Auto,*,Auto" Margin="28" RowSpacing="20">
+    <Grid ColumnDefinitions="*,Auto">
+      <StackPanel Spacing="6"><TextBlock Text="本地语音工作台" FontSize="26" FontWeight="SemiBold" Foreground="#172C34"/><TextBlock Text="{Binding Status}" Classes="label" TextWrapping="Wrap"/></StackPanel>
+      <Button Grid.Column="1" Content="暂停 / 恢复接单" Command="{Binding TogglePauseCommand}" VerticalAlignment="Center"/>
+    </Grid>
+    <TabControl Grid.Row="1">
+      <TabItem Header="转写任务">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="14" Margin="0,16,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="10"><Button Content="选择音频" Classes="primary" Command="{Binding AddAudioCommand}"/><TextBlock Text="也可拖入音频文件 · 关闭窗口后继续处理" Classes="label" VerticalAlignment="Center"/></StackPanel>
+          <Grid Grid.Row="1" ColumnDefinitions="5*,6*" ColumnSpacing="18">
+            <ListBox ItemsSource="{Binding Jobs}" SelectedItem="{Binding SelectedJob}" Background="White" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+              <ListBox.ItemsPanel><ItemsPanelTemplate><VirtualizingStackPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
+              <ListBox.ItemTemplate><DataTemplate x:DataType="local:JobRow"><StackPanel Margin="6,8" Spacing="5"><TextBlock Text="{Binding Title}" FontWeight="SemiBold"/><TextBlock Text="{Binding Id}" FontSize="11" Foreground="#64748B"/><StackPanel Orientation="Horizontal" Spacing="12"><TextBlock Text="{Binding State}"/><TextBlock Text="{Binding Stage}" Foreground="#475569"/></StackPanel></StackPanel></DataTemplate></ListBox.ItemTemplate>
+            </ListBox>
+            <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto" RowSpacing="10">
+              <TextBlock Text="转写结果" FontSize="17" FontWeight="SemiBold"/>
+              <TextBox Grid.Row="1" Text="{Binding ResultText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top"/>
+              <WrapPanel Grid.Row="2"><Button Content="取消任务" Command="{Binding CancelJobCommand}" Margin="0,0,8,0"/><Button Content="重试" Command="{Binding RetryJobCommand}" Margin="0,0,8,0"/><ComboBox ItemsSource="{Binding Formats}" SelectedItem="{Binding ExportFormat}" Width="125" Margin="0,0,8,0"/><Button Content="导出" Command="{Binding ExportCommand}"/></WrapPanel>
+            </Grid>
+          </Grid>
+          <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12"><Button Content="上一页" Command="{Binding PreviousPageCommand}"/><TextBlock Text="{Binding PageLabel}" VerticalAlignment="Center" Classes="label"/><Button Content="下一页" Command="{Binding NextPageCommand}"/></StackPanel>
+        </Grid>
+      </TabItem>
+      <TabItem Header="模型">
+        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16" Margin="0,16,0,0">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12"><StackPanel Spacing="6"><TextBlock Text="模型目录" Classes="label"/><TextBlock Text="{Binding ModelDirectory}" TextWrapping="Wrap"/></StackPanel><Button Grid.Column="1" Content="选择目录" Command="{Binding ChooseDirectoryCommand}"/></Grid>
+          <TextBlock Grid.Row="1" Text="选择目录后才下载模型。所有模型通过固定 SHA-256 校验；已安装文件保留原位置。" Classes="label" TextWrapping="Wrap"/>
+          <ListBox Grid.Row="2" ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel}" Background="White"><ListBox.ItemTemplate><DataTemplate x:DataType="local:ModelRow"><Grid ColumnDefinitions="*,Auto" Margin="10,14"><StackPanel Spacing="8"><TextBlock Text="{Binding Id}" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="{Binding Summary}" Classes="label"/></StackPanel><TextBlock Grid.Column="1" Text="{Binding State}" MaxWidth="330" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="#0F766E"/></Grid></DataTemplate></ListBox.ItemTemplate></ListBox>
+          <WrapPanel Grid.Row="3"><Button Content="下载 / 重试" Command="{Binding DownloadCommand}" Classes="primary" Margin="0,0,8,8"/><Button Content="取消下载" Command="{Binding CancelDownloadCommand}" Margin="0,0,8,8"/><Button Content="导入模型" Command="{Binding ImportCommand}" Margin="0,0,8,8"/><Button Content="设为默认" Command="{Binding SetDefaultCommand}" Margin="0,0,8,8"/><Button Content="卸载驻留模型" Command="{Binding UnloadCommand}" Margin="0,0,8,8"/><Button Content="删除所选模型" Command="{Binding DeleteModelCommand}" Margin="0,0,8,8"/></WrapPanel>
+        </Grid>
+      </TabItem>
+      <TabItem Header="设置与 API">
+        <ScrollViewer><StackPanel Margin="0,16,0,0" Spacing="16">
+          <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+            <StackPanel Spacing="10"><TextBlock Text="API 端口（重启生效）" Classes="label"/><NumericUpDown Value="{Binding Port}" Minimum="1024" Maximum="65535" FormatString="0"/><TextBlock Text="推理后端" Classes="label"/><ComboBox ItemsSource="{Binding Backends}" SelectedItem="{Binding Backend}" HorizontalAlignment="Stretch"/><TextBlock Text="空闲卸载等待（秒）" Classes="label"/><NumericUpDown Value="{Binding IdleSeconds}" Minimum="0" Maximum="86400" FormatString="0"/><CheckBox Content="保持模型加载" IsChecked="{Binding KeepLoaded}"/></StackPanel>
+            <StackPanel Grid.Column="1" Spacing="10"><TextBlock Text="任务与日志保留（天）" Classes="label"/><NumericUpDown Value="{Binding RetentionDays}" Minimum="1" Maximum="3650" FormatString="0"/><TextBlock Text="Bearer API key（留空则不校验）" Classes="label"/><TextBox Text="{Binding ApiKey}" PasswordChar="●"/><CheckBox Content="登录时仅启动到托盘" IsChecked="{Binding AutoStart}"/><TextBlock Text="仅监听本机。其他本地进程可访问 API；设置 key 可以限制调用。无公网监听或浏览器管理接口。" Classes="label" TextWrapping="Wrap"/></StackPanel>
+          </Grid>
+          <StackPanel Spacing="6"><TextBlock Text="模型下载源（镜像仅下载公开模型，音频始终在本地处理）" Classes="label"/><ComboBox ItemsSource="{Binding DownloadHosts}" SelectedItem="{Binding DownloadHost}" Width="250"/><TextBlock Text="来源：ggerganov/whisper.cpp。镜像与原站使用相同的固定大小及 SHA-256 校验。" Classes="label" TextWrapping="Wrap"/></StackPanel>
+          <Button Content="保存设置" Command="{Binding SaveSettingsCommand}" Classes="primary" HorizontalAlignment="Left"/>
+          <TextBlock Text="{Binding BackendDetails}" TextWrapping="Wrap" Classes="label"/>
+          <Border Background="White" Padding="18" CornerRadius="8"><StackPanel Spacing="12"><TextBlock Text="调用本地 API" FontSize="18" FontWeight="SemiBold"/><TextBox Text="{Binding ApiExample}" IsReadOnly="True" TextWrapping="Wrap" FontFamily="Cascadia Mono, Consolas"/><Button Content="复制示例" Command="{Binding CopyExampleCommand}" HorizontalAlignment="Left"/><TextBlock Text="whisper-1 映射到本地默认模型。支持异步任务与兼容转写 / 英文翻译；结果可能与托管模型不同。" Classes="label" TextWrapping="Wrap"/></StackPanel></Border>
+        </StackPanel></ScrollViewer>
+      </TabItem>
+    </TabControl>
+    <Border Grid.Row="2" Background="#E7EFED" Padding="14,10" CornerRadius="6"><TextBlock Text="{Binding Message}" Foreground="#24443E" TextWrapping="Wrap"/></Border>
+  </Grid>
+</Window>
