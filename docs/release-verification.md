@@ -20,5 +20,7 @@
 - 图形目录页点击取消并确认退出，回到 Sandbox 桌面；默认安装目录与卸载记录均不存在。卸载后开始菜单快捷方式为 0、Worker 为 0，另一绿色副本的 Run 项保持原路径。证据：`cancel-and-cleanup.json`。
 - 全新安装与解压副本分别在无排队、无运行任务时完成 0.1.0 → 0.1.1 升级，保留模型、配置和历史结果，升级后再次转写通过。证据：`installed-idle.txt`、`portable-idle.txt`。
 - 两种模式均由测试 TCP 服务提供有效更新索引，在 nupkg 开始传输 4096 字节后重置连接；确认实际包下载被中断、更新失败被记录，旧版 0.1.1 继续接单且再次转写成功。证据：`installed-interrupted.txt`、`portable-interrupted.txt`。该场景独立于完整损坏包与连接拒绝。
+- 安装版与绿色版分别单独启用本副本 Run 项，在 Sandbox 内实际执行注销后通过 `wsb connect` 重新登录；未手动启动应用，均出现单个宿主进程、MainWindowHandle=0、对应模式/version=0.1.1 的健康接口与 accepting=true。为让测试盘跨会话可见，另在 Sandbox System 上下文将 T: 映射到 C:\TestDrive。证据：`installed-logon.json`、`portable-logon.json`。这补齐此前验证报告中未实测的注销后登录边界。
+- 宿主使用 local-04 发行 Worker 与原生库实测 Intel Graphics Vulkan，实际设备 Vulkan0，转写、同模型复用、TTL 卸载及 Worker 释放通过。证据：`host-vulkan.txt`；没有 CUDA 硬件，未声称 CUDA 真机通过。
 
 GitHub 在线发布的结果在实际验收后追加。本地升级不替代在线更新验收。
