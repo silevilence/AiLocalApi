@@ -9,7 +9,10 @@ public sealed class ApplicationService : IAsyncDisposable
     public StateStore Store { get; }
     public ModelManager Models { get; }
     public WorkerClient Worker { get; } = new();
-    public bool Paused { get; set; }
+    private volatile bool paused;
+    private volatile bool draining;
+    public bool Paused { get => paused || draining; set => paused = value; }
+    public bool Draining => draining;
     public string ModelState { get; private set; } = "unloaded";
     public string? LoadedModel { get; private set; }
     public int LoadCount { get; private set; }
@@ -47,6 +50,7 @@ public sealed class ApplicationService : IAsyncDisposable
         var id = Guid.NewGuid().ToString("N"); var directory = Path.Combine(Paths.Temporary, id); var accepted = false;
         try
         {
+            if (Paused) throw new AppException("paused", "服务已暂停接单。", 503);
             ModelInfo model;
             IDisposable reservation;
             lock (Models.Sync) { model = Models.Require(modelId); reservation = Models.Acquire(model.Id); }
@@ -116,12 +120,12 @@ public sealed class ApplicationService : IAsyncDisposable
                 await execution.WaitAsync(stop.Token);
                 try
                 {
-                    var job = Store.Claim();
+                    var job = draining ? null : Store.Claim();
                     if (job is not null) await ExecuteAsync(job);
                     else if (LoadedModel is not null && !Store.Settings.KeepLoaded && DateTimeOffset.UtcNow - lastUse >= TimeSpan.FromSeconds(Store.Settings.IdleSeconds)) await UnloadCoreAsync();
                 }
                 finally { execution.Release(); }
-                if (Store.Count("queued") > 0) continue;
+                if (!draining && Store.Count("queued") > 0) continue;
                 if (DateTimeOffset.UtcNow >= nextCleanup) { Cleanup(); nextCleanup = DateTimeOffset.UtcNow.AddMinutes(1); }
                 using var tick = CancellationTokenSource.CreateLinkedTokenSource(stop.Token); tick.CancelAfter(1000);
                 try { await wake.Reader.ReadAsync(tick.Token); } catch (OperationCanceledException) when (!stop.IsCancellationRequested) { }
@@ -176,6 +180,15 @@ public sealed class ApplicationService : IAsyncDisposable
         if (!await execution.WaitAsync(0)) throw new AppException("model_busy", "任务正在执行，结束后才能卸载模型。", 409);
         try { await UnloadCoreAsync(); } finally { execution.Release(); }
     }
+    public async Task DrainForUpdateAsync(CancellationToken token = default)
+    {
+        draining = true;
+        // Let uploads already admitted finish persisting, then wait for the current inference.
+        await ingestion.WaitAsync(token); ingestion.Release();
+        await execution.WaitAsync(token);
+        try { await UnloadCoreAsync(); } finally { execution.Release(); }
+    }
+    public void ResumeAfterUpdateFailure() { draining = false; wake.Writer.TryWrite(true); }
     private async Task UnloadCoreAsync()
     {
         ModelState = "unloading";

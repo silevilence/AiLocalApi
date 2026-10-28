@@ -15,6 +15,10 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly ApplicationService service;
     private readonly ApiHost api;
+    public AppUpdates? Updates { get; init; }
+    public bool CanUpdate => Distribution.Packaged;
+    public string ReleaseInfo => $"{Distribution.Mode} · {Distribution.Version}\n数据：{service.Paths.Data}\n{Updates?.Status}\n{Updates?.Notes}";
+    [RelayCommand] private Task CheckUpdate() => Updates?.CheckAndApplyAsync() ?? Task.CompletedTask;
     private bool refreshing;
     private string? lastSnapshot;
     public ObservableCollection<ModelRow> Models { get; } = [];
@@ -84,6 +88,7 @@ public partial class MainViewModel : ObservableObject
         if (refreshing) return; refreshing = true;
         try
         {
+            OnPropertyChanged(nameof(ReleaseInfo));
             Status = $"{api.Status} · {(service.Paused ? "暂停接单" : "接受任务")} · 后端 {Localize(service.Worker.Backend)} · 模型 {Localize(service.ModelState)}";
             BackendDetails = $"{service.Worker.BackendDetails}\n{service.LastError}".Trim(); Paused = service.Paused;
             var snapshot = $"{service.Store.Revision}/{service.LoadedModel}/{service.Worker.ProcessId}/{page}/{string.Join(';', service.Models.Progress.Values)}";

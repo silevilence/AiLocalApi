@@ -6,7 +6,7 @@ namespace AiLocalApi.Desktop;
 internal sealed class SingleInstance : IDisposable
 {
     private readonly Mutex mutex;
-    private readonly string pipeName = "AiLocalApi-activate-" + WindowsIdentity.GetCurrent().User!.Value;
+    private readonly string pipeName = "AiLocalApi-activate-" + WindowsIdentity.GetCurrent().User!.Value + "-" + Distribution.Identity;
     private readonly CancellationTokenSource stop = new();
     public bool IsPrimary { get; }
     public SingleInstance()

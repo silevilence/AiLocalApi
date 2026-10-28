@@ -29,7 +29,7 @@ internal static class ApiRoutes
                 if (error is null) service.Paths.Log("http_request_failed");
             }
         });
-        app.MapGet("/health", () => Results.Ok(new { status = "ok", accepting = !service.Paused, modelState = service.ModelState, backend = service.Worker.Backend }));
+        app.MapGet("/health", () => Results.Ok(new { status = "ok", accepting = !service.Paused, modelState = service.ModelState, backend = service.Worker.Backend, version = Distribution.Version, mode = Distribution.Mode, updating = service.Draining }));
         app.MapGet("/v1/models", () => Results.Ok(new { @object = "list", data = ModelList(service) }));
         app.MapGet("/api/jobs", (int? page, int? size) => Results.Ok(service.Store.Jobs(page ?? 0, size ?? 50).Select(PublicJob)));
         app.MapGet("/api/jobs/{id}", (string id) => Results.Ok(PublicJob(service.Get(id))));

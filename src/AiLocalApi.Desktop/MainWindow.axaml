@@ -124,6 +124,7 @@
           </StackPanel>
         </ScrollViewer>
       </TabItem>
+      <TabItem Header="版本与更新"><ScrollViewer><StackPanel Margin="0,16,16,0" Spacing="16"><TextBlock Text="{Binding ReleaseInfo}" TextWrapping="Wrap"/><TextBlock Text="发行版每六小时检查更新；下载校验后等待当前转写完成，再重启应用。更新会短暂暂停 API，排队任务在重启后继续。" TextWrapping="Wrap"/><Button Content="检查并安全更新" Command="{Binding CheckUpdateCommand}" IsEnabled="{Binding CanUpdate}"/></StackPanel></ScrollViewer></TabItem>
     </TabControl>
     <Border Grid.Row="2" Background="#E7EFED" Padding="14,10" CornerRadius="6"><ScrollViewer MaxHeight="64"><TextBlock Text="{Binding Message}" Margin="0,0,8,0" Foreground="#24443E" TextWrapping="Wrap"/></ScrollViewer></Border>
   </Grid>
