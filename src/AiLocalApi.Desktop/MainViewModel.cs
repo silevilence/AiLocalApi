@@ -16,8 +16,8 @@ public partial class MainViewModel : ObservableObject
     private readonly ApplicationService service;
     private readonly ApiHost api;
     public AppUpdates? Updates { get; init; }
-    public bool CanUpdate => Distribution.Packaged;
-    public string ReleaseInfo => $"{Distribution.Mode} · {Distribution.Version}\n数据：{service.Paths.Data}\n{Updates?.Status}\n{Updates?.Notes}";
+    public bool CanUpdate => Distribution.Packaged && Updates?.IsBusy != true;
+    public string ReleaseInfo => $"{Distribution.Mode} · {Distribution.Version}\n程序：{Distribution.Root}\n数据：{service.Paths.Data}\n更新源：{(string.IsNullOrEmpty(Updates?.Source) ? "尚未检查" : Updates.Source)}\n{Updates?.Status}\n{Updates?.Notes}";
     [RelayCommand] private Task CheckUpdate() => Updates?.CheckAndApplyAsync() ?? Task.CompletedTask;
     private bool refreshing;
     private string? lastSnapshot;
@@ -89,6 +89,7 @@ public partial class MainViewModel : ObservableObject
         try
         {
             OnPropertyChanged(nameof(ReleaseInfo));
+            OnPropertyChanged(nameof(CanUpdate));
             Status = $"{api.Status} · {(service.Paused ? "暂停接单" : "接受任务")} · 后端 {Localize(service.Worker.Backend)} · 模型 {Localize(service.ModelState)}";
             BackendDetails = $"{service.Worker.BackendDetails}\n{service.LastError}".Trim(); Paused = service.Paused;
             var snapshot = $"{service.Store.Revision}/{service.LoadedModel}/{service.Worker.ProcessId}/{page}/{string.Join(';', service.Models.Progress.Values)}";

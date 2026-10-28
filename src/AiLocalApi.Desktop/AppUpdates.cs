@@ -8,6 +8,7 @@ namespace AiLocalApi.Desktop;
 public sealed class AppUpdates(ApplicationService service, Func<Task> exit)
 {
     private readonly SemaphoreSlim gate = new(1);
+    public bool IsBusy => gate.CurrentCount == 0;
     public string Status { get; private set; } = Distribution.Packaged ? "等待检查更新" : "开发运行 · 更新已禁用";
     public string Notes { get; private set; } = "";
     public string Source { get; private set; } = "";
@@ -48,7 +49,7 @@ public sealed class AppUpdates(ApplicationService service, Func<Task> exit)
             service.ResumeAfterUpdateFailure();
             Report("更新失败，可重试：" + error.Message);
         }
-        finally { gate.Release(); }
+        finally { gate.Release(); Changed?.Invoke(); }
     }
     public async Task AutomaticAsync(CancellationToken token)
     {
