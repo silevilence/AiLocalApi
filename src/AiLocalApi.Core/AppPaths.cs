@@ -13,7 +13,15 @@ public sealed record AppPaths(string Data)
     public void Log(string message, string? jobId = null)
     {
         // Callers supply diagnostic codes, never audio, prompts or transcript content.
-        lock (this) File.AppendAllText(Path.Combine(Logs, $"{DateTime.UtcNow:yyyy-MM-dd}.log"), $"{DateTimeOffset.UtcNow:O} job={jobId ?? "-"} {message}{Environment.NewLine}");
+        try
+        {
+            lock (this) File.AppendAllText(Path.Combine(Logs, $"{DateTime.UtcNow:yyyy-MM-dd}.log"), $"{DateTimeOffset.UtcNow:O} job={jobId ?? "-"} {message}{Environment.NewLine}");
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // Diagnostics must not terminate scheduling or roll back a completed job.
+            System.Diagnostics.Trace.WriteLine("diagnostic_log_unavailable");
+        }
     }
 }
 
