@@ -10,12 +10,15 @@ $ErrorActionPreference = 'Stop'
 function Invoke-Gh { $result = & gh @args; if ($LASTEXITCODE) { throw "GitHub command failed ($($args[0]))" }; return $result }
 $tag = "v$Version"
 $names = @("AiLocalApi-$Version-win-x64-Setup.exe", 'AiLocalApi-win-Portable.zip', "AiLocalApi-$Version-full.nupkg", 'releases.win.json')
-$body = (Get-Content -LiteralPath $Notes -Raw).TrimEnd()
-$releases = Invoke-Gh release list --repo $Repository --limit 1000 --json tagName | ConvertFrom-Json
-$release = $null
-if ($releases | Where-Object tagName -eq $tag) { $release = Invoke-Gh api "repos/$Repository/releases/tags/$tag" | ConvertFrom-Json }
+$body = (Get-Content -LiteralPath $Notes -Raw).Replace("`r`n", "`n").TrimEnd()
+function Get-Release {
+    # The tag endpoint only returns published releases; the authenticated list includes drafts.
+    $filter = '.[] | select(.tag_name == "' + $tag + '")'
+    return Invoke-Gh api "repos/$Repository/releases?per_page=100" --paginate --jq $filter | ConvertFrom-Json
+}
+$release = Get-Release
 if ($release) {
-    if ($release.target_commitish -ne $Commit -or $release.body.TrimEnd() -ne $body) { throw 'Existing release differs from this tag commit or changelog; refusing to overwrite' }
+    if ($release.target_commitish -ne $Commit -or $release.body.Replace("`r`n", "`n").TrimEnd() -ne $body) { throw 'Existing release differs from this tag commit or changelog; refusing to overwrite' }
     if (!$release.draft) {
         if ($release.prerelease -or $release.assets.Count -ne 4) { throw 'Published release has unexpected state/assets' }
         foreach ($name in $names) {
@@ -36,7 +39,7 @@ if (!$release) {
 }
 # A failed upload can be retried against the same unpublished draft; published releases are immutable here.
 foreach ($name in $names) { Invoke-Gh release upload $tag "$Directory/$name" --repo $Repository --clobber }
-$release = Invoke-Gh api "repos/$Repository/releases/tags/$tag" | ConvertFrom-Json
+$release = Get-Release
 if (!$release.draft -or $release.assets.Count -ne 4) { throw 'Draft state or final asset count changed unexpectedly' }
 foreach ($name in $names) {
     $asset = @($release.assets | Where-Object name -eq $name)
