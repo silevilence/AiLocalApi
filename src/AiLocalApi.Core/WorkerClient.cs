@@ -13,6 +13,7 @@ public sealed class WorkerClient : IAsyncDisposable
     private readonly SemaphoreSlim gate = new(1);
     public int? ProcessId => process is { HasExited: false } ? process.Id : null;
     public string Backend { get; private set; } = "not loaded";
+    public string BackendDetails { get; private set; } = "";
     public async Task<WorkerReply> SendAsync(WorkerRequest request, Action<WorkerReply>? progress = null, CancellationToken cancellationToken = default)
     {
         await gate.WaitAsync(cancellationToken);
@@ -20,17 +21,34 @@ public sealed class WorkerClient : IAsyncDisposable
         {
             await EnsureStartedAsync(cancellationToken);
             await writer!.WriteLineAsync(Wire.Encode(request));
-            using var registration = cancellationToken.Register(() => { try { process?.Kill(true); } catch (InvalidOperationException) { } });
+            using var finished = new CancellationTokenSource();
+            var currentProcess = process; var currentWriter = writer;
+            using var registration = cancellationToken.Register(() => _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await currentWriter!.WriteLineAsync(Wire.Encode(new WorkerRequest(request.Id, "cancel")));
+                    await Task.Delay(TimeSpan.FromSeconds(3), finished.Token);
+                    if (currentProcess is { HasExited: false }) currentProcess.Kill(true);
+                }
+                catch (Exception error) when (error is OperationCanceledException or IOException or InvalidOperationException) { }
+            }));
+            try
+            {
             while (true)
             {
-                var line = await reader!.ReadLineAsync(cancellationToken) ?? throw new IOException("Worker disconnected; retry the job.");
+                var line = await reader!.ReadLineAsync() ?? throw new IOException("Worker disconnected; retry the job.");
                 var reply = Wire.Decode<WorkerReply>(line);
                 if (reply.Id != request.Id) throw new IOException("Worker correlation mismatch");
                 if (reply.Backend is not null) Backend = reply.Backend;
+                if (reply.BackendDetails is not null) BackendDetails = reply.BackendDetails;
                 if (reply.Kind == "progress") { progress?.Invoke(reply); continue; }
+                cancellationToken.ThrowIfCancellationRequested();
                 if (reply.Kind == "error") throw new AppException("worker_error", reply.Error ?? "Worker failed", 422);
                 return reply;
             }
+            }
+            finally { finished.Cancel(); }
         }
         finally { gate.Release(); }
     }
@@ -53,11 +71,27 @@ public sealed class WorkerClient : IAsyncDisposable
     private void Reset()
     {
         if (process is { HasExited: false }) process.Kill(true);
-        process?.Dispose(); process = null; reader?.Dispose(); writer?.Dispose(); pipe?.Dispose();
+        process?.Dispose(); process = null;
+        try { writer?.Dispose(); } catch (IOException) { } catch (ObjectDisposedException) { }
+        writer = null; reader?.Dispose(); reader = null; pipe?.Dispose(); pipe = null; Backend = "not loaded";
     }
     public async ValueTask DisposeAsync()
     {
         await gate.WaitAsync();
-        try { Reset(); } finally { gate.Release(); }
+        try
+        {
+            if (process is { HasExited: false } && writer is not null)
+            {
+                try
+                {
+                    await writer.WriteLineAsync(Wire.Encode(new WorkerRequest(Guid.NewGuid().ToString("N"), "exit")));
+                    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                    await process.WaitForExitAsync(timeout.Token);
+                }
+                catch (Exception error) when (error is IOException or ObjectDisposedException or OperationCanceledException) { }
+            }
+            Reset();
+        }
+        finally { gate.Release(); }
     }
 }
