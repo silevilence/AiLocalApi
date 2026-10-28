@@ -23,4 +23,12 @@
 - 安装版与绿色版分别单独启用本副本 Run 项，在 Sandbox 内实际执行注销后通过 `wsb connect` 重新登录；未手动启动应用，均出现单个宿主进程、MainWindowHandle=0、对应模式/version=0.1.1 的健康接口与 accepting=true。为让测试盘跨会话可见，另在 Sandbox System 上下文将 T: 映射到 C:\TestDrive。证据：`installed-logon.json`、`portable-logon.json`。这补齐此前验证报告中未实测的注销后登录边界。
 - 宿主使用 local-04 发行 Worker 与原生库实测 Intel Graphics Vulkan，实际设备 Vulkan0，转写、同模型复用、TTL 卸载及 Worker 释放通过。证据：`host-vulkan.txt`；没有 CUDA 硬件，未声称 CUDA 真机通过。
 
-GitHub 在线发布的结果在实际验收后追加。本地升级不替代在线更新验收。
+## GitHub 正式发行
+
+- [v0.1.0](https://github.com/silevilence/AiLocalApi/releases/tag/v0.1.0) 已由 [Actions 40635162426](https://github.com/silevilence/AiLocalApi/actions/runs/40635162426) 成功发布，提交 `b5089fa13da60971c3632dbe6fa21f31d9d0eb24`。Windows runner 的 23 项测试、发布输出真实 CPU 转写/复用/卸载、NSIS 与更新资产版本检查均通过。
+- 首次发布作业在上传草稿后因按标签接口不返回草稿而失败，没有公开不完整版本。修正为认证列表查询后重跑成功；只在尚未发布时修正首版标签，发布后不改动标签或资产。
+- 已发布版本的只读重试预检返回 Already published，核对相同提交、正文和四项完整资产后跳过，不覆盖。CI 结果存于 `artifacts/release-results/ci-010/`。
+- 从实际 v0.1.0 Release 下载四项资产，全文件 SHA-256 与 GitHub 服务端摘要一致；安装外层、便携元数据、宿主与 Worker 版本均为 0.1.0。索引的 NotesMarkdown、Release 正文与对应 changelog 章节一致，没有包含旧版全文。当前连接的整流下载曾停滞，使用同一 GitHub 官方资产地址分段下载后通过完整摘要校验。
+- 正式 NSIS 包通过图形目录页安装到 `T:\GitHub Install`，首次运行选择独立 `T:\GitHub Data`；正式 Portable ZIP 解压到 `T:\GitHub 绿色`。两者在 Sandbox 均通过真实转写、单实例和正常退出检查，保留 0.1.0 实例等待第二版；安装注册记录为原选定路径和单个 Update.exe 卸载器。证据：`github-installed-baseline.txt`、`github-portable-baseline.txt`、`github-baseline-registry.json`。
+
+在线双形态升级结果在实际验收后追加。本地升级不替代在线更新验收。
