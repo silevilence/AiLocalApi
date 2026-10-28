@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.Cryptography;
 using System.Text;
 using AiLocalApi.Contracts;
 using AiLocalApi.Core;
@@ -18,8 +17,7 @@ internal static class ApiRoutes
             try
             {
                 if (context.Request.Host.Host is not ("localhost" or "127.0.0.1" or "[::1]") || context.Request.Headers.ContainsKey("Origin")) throw new AppException("origin_denied", "Only local non-browser clients are allowed.", 403);
-                var key = service.Store.Settings.ApiKey;
-                if (context.Request.Path != "/health" && !string.IsNullOrEmpty(key) && !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(context.Request.Headers.Authorization.ToString()), Encoding.UTF8.GetBytes("Bearer " + key))) throw new AppException("unauthorized", "Invalid Bearer API key.", 401);
+                if (context.Request.Path != "/health" && !service.Store.Authorize(context.Request.Headers.Authorization.ToString())) throw new AppException("unauthorized", "Missing, disabled or invalid Bearer API key.", 401);
                 await next(context);
             }
             catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested) { }

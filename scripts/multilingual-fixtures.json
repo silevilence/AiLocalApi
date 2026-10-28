@@ -1,0 +1,54 @@
+[
+  {
+    "language": "ja",
+    "config": "ja_jp",
+    "file": "fleurs-ja.wav",
+    "archiveEntry": "dev/10009621509886822059.wav",
+    "sha256": "9627b8f5d46806e1a433b443d692fdfb24f26a35c1a47eba26291475fc643d7b",
+    "reference": "多くの場合、海外のギャップイヤーコースに入学することで、帰国後に実際に大学に進学しやすくなります。",
+    "normalized": "多くの場合 海外のギャップイヤーコースに入学することで 帰国後に実際に大学に進学しやすくなります",
+    "revision": "633a7b54485c911bc1df035d1d4384656eaa4724",
+    "source": "https://huggingface.co/datasets/google/fleurs/resolve/633a7b54485c911bc1df035d1d4384656eaa4724/data/ja_jp/audio/dev.tar.gz",
+    "license": "CC-BY-4.0",
+    "attribution": "Google FLEURS (Conneau et al., 2022)"
+  },
+  {
+    "language": "ko",
+    "config": "ko_kr",
+    "file": "fleurs-ko.wav",
+    "archiveEntry": "dev/10030969252796176788.wav",
+    "sha256": "4e661e3d857e1fc982cbdd3642de80e02704144183c50a4913d98f4652dddcc9",
+    "reference": "이제 과학적 데이터가 거대한 규모의 이 탄소 경제는 지난 이백만 년 동안 인류의 진화를 도왔던 안정적인 상태에서 생물권을 몰아냈음을 보여줍니다.",
+    "normalized": "이제 과학적 데이터가 거대한 규모의 이 탄소 경제는 지난 이백만 년 동안 인류의 진화를 도왔던 안정적인 상태에서 생물권을 몰아냈음을 보여줍니다",
+    "revision": "633a7b54485c911bc1df035d1d4384656eaa4724",
+    "source": "https://huggingface.co/datasets/google/fleurs/resolve/633a7b54485c911bc1df035d1d4384656eaa4724/data/ko_kr/audio/dev.tar.gz",
+    "license": "CC-BY-4.0",
+    "attribution": "Google FLEURS (Conneau et al., 2022)"
+  },
+  {
+    "language": "zh",
+    "config": "cmn_hans_cn",
+    "file": "fleurs-zh.wav",
+    "archiveEntry": "dev/10116334326946811387.wav",
+    "sha256": "f3e12a114bedbc867e06bfb7aceb2721701aa729685b9e4be39f2b98305b72ab",
+    "reference": "报告警告称，没有人能保证目前在伊拉克采取的任何行动能够阻止宗派战争、不断增长的暴力或走向混乱。",
+    "normalized": "报 告 警 告 称 没 有 人 能 保 证 目 前 在 伊 拉 克 采 取 的 任 何 行 动 能 够 阻 止 宗 派 战 争 不 断 增 长 的 暴 力 或 走 向 混 乱",
+    "revision": "633a7b54485c911bc1df035d1d4384656eaa4724",
+    "source": "https://huggingface.co/datasets/google/fleurs/resolve/633a7b54485c911bc1df035d1d4384656eaa4724/data/cmn_hans_cn/audio/dev.tar.gz",
+    "license": "CC-BY-4.0",
+    "attribution": "Google FLEURS (Conneau et al., 2022)"
+  },
+  {
+    "language": "en",
+    "config": "en_us",
+    "file": "fleurs-en.wav",
+    "archiveEntry": "dev/10010138729160973689.wav",
+    "sha256": "048169439c0328b758349af74aeb54a82a7a476e309709eb791dced06db25d48",
+    "reference": "When you call someone who is thousands of miles away, you are using a satellite.",
+    "normalized": "when you call someone who is thousands of miles away you are using a satellite",
+    "revision": "633a7b54485c911bc1df035d1d4384656eaa4724",
+    "source": "https://huggingface.co/datasets/google/fleurs/resolve/633a7b54485c911bc1df035d1d4384656eaa4724/data/en_us/audio/dev.tar.gz",
+    "license": "CC-BY-4.0",
+    "attribution": "Google FLEURS (Conneau et al., 2022)"
+  }
+]

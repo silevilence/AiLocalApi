@@ -46,4 +46,21 @@ if (service.Worker.ProcessId is not null || service.LoadedModel is not null) thr
 Console.WriteLine("PASS: inference, model reuse, idle unload and Worker release");
 if (args.Contains("--suite")) await Regression.RunAsync(service, Path.GetFullPath(args[2]));
 if (args.Contains("--models")) await Regression.ModelsAsync(service, Path.GetFullPath(args[2]));
+if (args.Contains("--multilingual")) await MultilingualRegression.RunAsync(service, Path.GetDirectoryName(Path.GetFullPath(args[2]))!);
+if (args.Contains("--diagnostics"))
+{
+    foreach (var backend in new[] { "cpu", "auto", "vulkan", "cuda" })
+    {
+        using var probeTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        try { Console.WriteLine($"Backend {backend}: {await ConnectionDiagnostics.TestBackendAsync(service, backend, probeTimeout.Token)}"); }
+        catch (Exception error) when (backend is "vulkan" or "cuda") { Console.WriteLine($"Backend {backend} unavailable: {error.Message}"); }
+    }
+    foreach (var host in new[] { "huggingface.co", "hf-mirror.com" })
+    {
+        using var probeTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        try { Console.WriteLine(await ConnectionDiagnostics.TestSourceAsync(host, probeTimeout.Token)); }
+        catch (Exception error) { Console.WriteLine($"Source {host} unavailable: {error.Message}"); }
+    }
+    Console.WriteLine("PASS: CPU/auto actual model probes; optional GPU and network availability reported above.");
+}
 return 0;

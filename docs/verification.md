@@ -109,3 +109,17 @@ wsb start --config '<Configuration><vGPU>Disable</vGPU><Networking>Disable</Netw
 边界：CUDA 真机、实体第二硬盘、长期运行泄漏、真实用户注销后再次登录未进行实机验收；登录启动注册值、当前入口和 --tray 行为由代码及启动测试检查。tiny 的中文识别与翻译可能有明显错误；单个原生 token 跨多个中文词时词时间可能重叠。没有宣称完整 OpenAI 服务语义、实时识别、流式输出或说话人分离。
 
 Sandbox 命令与隔离选项依据 [Microsoft CLI 文档](https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-cli) 和 [配置文件文档](https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-configure-using-wsb-file)。设备查询与工厂初始化依据 [ggml 后端接口](https://github.com/ggml-org/whisper.cpp/blob/v1.8.3/ggml/include/ggml-backend.h) 和 [Whisper.net 1.9.1 工厂实现](https://github.com/sandrohanea/whisper.net/blob/1.9.1/Whisper.net/WhisperFactory.cs)，并核对随包 DLL 的实际导出符号。
+
+
+## 2026-10-28 工作台体验与连接管理增量验收
+
+在此前基础验收之后，完成滚动条空间、独立 API 密钥页、两个连接测试按钮、API 端口直接重启、任务操作状态与中日英韩真实音频回归。最新结果与具体边界以 [体验验收报告](ux-review-2026-10-28.md) 为准，21 项自动化测试通过。
+
+重现四语/连接验证（先运行 prepare-multilingual.ps1、prepare-fixtures.ps1 与 publish-sandbox.ps1；程序目录映射只读到 C:\AiLocalApi，结果目录映射可写到 C:\Results）：
+
+```text
+C:\AiLocalApi\verify\AiLocalApi.Verify.exe C:\UxData C:\AiLocalApi\models C:\AiLocalApi\fixtures\jfk.wav cpu --copy-model --suite --multilingual --diagnostics --report C:\Results\sandbox-core.txt
+C:\AiLocalApi\verify\AiLocalApi.Verify.exe --http C:\AiLocalApi\app\AiLocalApi.Desktop.exe C:\UxData C:\AiLocalApi\fixtures\jfk.wav --report C:\Results\sandbox-http.txt
+```
+
+第二条命令等待第一条结束后运行。不要同时在该 Sandbox 登录会话中启动另一个桌面实例。四语音频源为 Google FLEURS / CC-BY-4.0，固定修订与哈希随清单一起复制到验证包。

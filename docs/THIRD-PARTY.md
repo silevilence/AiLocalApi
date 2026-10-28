@@ -7,3 +7,8 @@ FFmpeg.AutoGen 9.0.1.1（LGPL-3.0）对应 FFmpeg 9 ABI。本地验证使用 Btb
 CPU 为基线；Vulkan 需要显卡驱动提供 Vulkan loader 和计算支持；CUDA 需要 NVIDIA GPU、匹配驱动及对应 Whisper.net CUDA 运行库。显式选择缺失的后端返回错误，不假报 GPU 成功。当前机器无 NVIDIA 显卡，CUDA 组合未实测。
 
 Whisper.net CPU 原生库还依赖 MSVC CRT 与 OpenMP（包括 `vcomp140.dll`）。Sandbox 自包含验证包从 Visual Studio 的 **Redist** 目录复制 14.44.35112 x64 的 `Microsoft.VC143.CRT`、`Microsoft.VC143.OPENMP`，按 Microsoft Visual Studio 分发条款使用，不能从 debug_nonredist 目录复制文件。构建脚本支持 `-VcRedist` 指定合法分发目录；开发运行也可使用系统已安装的 VC++ 2015–2022 x64 Redistributable。此依赖不能被 .NET 自包含发布取代。
+
+
+## 多语言验证音频
+
+Google [FLEURS](https://huggingface.co/datasets/google/fleurs)（Conneau et al., 2022），CC-BY-4.0。开发脚本从固定版本 `633a7b54485c911bc1df035d1d4384656eaa4724` 的 dev 归档提取各语言第一个 WAV，不修改音频；语言、原路径、摘要和参考文本见 `scripts/multilingual-fixtures.json`。测试覆盖中、日、英、韩，不构成完整语言质量基准。音频下载至忽略的 artifacts 目录，不纳入源码或正式发行包；Sandbox 验证材料中附带来源清单。

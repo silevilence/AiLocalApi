@@ -1,15 +1,15 @@
 # 本地 API
 
-默认地址 `http://localhost:17840`；仅 IPv4/IPv6 回环监听。设置 Bearer key 后除 `/health` 外均需 `Authorization: Bearer <key>`。有 Origin 的浏览器请求和非回环 Host 被拒绝。其他本地进程处于同机信任边界；不提供公网监听或 HTTP 管理写接口。
+默认地址 `http://localhost:17840`；仅 IPv4/IPv6 回环监听。在“API 密钥”页关闭匿名访问后，除 `/health` 外均需 `Authorization: Bearer <key>`。多个已启用密钥均可使用；停用或删除即时影响后续请求，已接受的任务继续运行。开启匿名访问仅允许缺少 Authorization 的请求，携带无效密钥仍返回 401。有 Origin 的浏览器请求和非回环 Host 被拒绝。其他本地进程处于同机信任边界；不提供公网监听或 HTTP 管理写接口。
 
 ## 异步任务
 
 ```powershell
 curl.exe http://localhost:17840/api/jobs -H "Authorization: Bearer YOUR_KEY" -F "file=@audio.wav" -F "model=whisper-1"
-curl.exe http://localhost:17840/api/jobs/JOB_ID
-curl.exe http://localhost:17840/api/jobs/JOB_ID/result?format=srt
-curl.exe -X POST http://localhost:17840/api/jobs/JOB_ID/cancel
-curl.exe -X POST http://localhost:17840/api/jobs/JOB_ID/retry
+curl.exe http://localhost:17840/api/jobs/JOB_ID -H "Authorization: Bearer YOUR_KEY"
+curl.exe http://localhost:17840/api/jobs/JOB_ID/result?format=srt -H "Authorization: Bearer YOUR_KEY"
+curl.exe -X POST http://localhost:17840/api/jobs/JOB_ID/cancel -H "Authorization: Bearer YOUR_KEY"
+curl.exe -X POST http://localhost:17840/api/jobs/JOB_ID/retry -H "Authorization: Bearer YOUR_KEY"
 ```
 
 提交成功返回 **202**、`id`、`Location`。客户端断开后已持久化任务继续。`GET /api/jobs?page=0&size=50` 分页（每页最多 100）。状态：queued/running/succeeded/failed/cancelled/expired；阶段为 queued/loading/decoding/transcribing/completed/interrupted/cancelled/expired。阶段不是伪造百分比。取消重复调用幂等；仅 failed/cancelled 可重试，succeeded 不会被覆盖。结果尚未完成返回 409，失败/取消返回 422，过期返回 410。
@@ -35,4 +35,6 @@ JSON 基础响应只含 `text`。verbose_json 提供 `text/language/duration` �
 
 默认保留 7 天，从最终状态更新时间计算。过期清理上传和结果，保留 expired 元数据供查询；活动任务不清理。没有 Realtime、流式识别或 diarization。输出质量由本地模型决定，与 OpenAI 托管模型不保证一致。
 
-验证客户端使用官方 [OpenAI .NET SDK](https://github.com/openai/openai-dotnet) 2.2.0，将 `OpenAIClientOptions.Endpoint` 指向本地 `/v1`；无需真实云端 key，不会把音频发送到云端。
+验证客户端使用官方 [OpenAI .NET SDK](https://github.com/openai/openai-dotnet) 2.2.0，将 `OpenAIClientOptions.Endpoint` 指向本地 `/v1`；SDK 的凭据填写本地创建的有效密钥，无需真实云端 key，不会把音频发送到云端。即使允许匿名访问，SDK 主动携带的无效密钥也会被拒绝。
+
+端口可在设置页直接应用并重启 API，调用示例会同步实际监听地址。切换先绑定新端口，失败保留旧服务；成功后停止旧监听（最多等待 5 秒）。异步任务保留，进行中的同步请求可能断开并按原有断连规则取消。

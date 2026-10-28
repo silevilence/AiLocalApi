@@ -7,7 +7,7 @@ public sealed record Settings(string? ModelDirectory = null, string? DefaultMode
 public sealed record ModelInfo(string Id, string Path, string Sha256, long Size, bool Multilingual, string Quantization, string Source);
 public sealed record Job(string Id, string Model, string Input, TranscriptionOptions Options, string State, string Stage, DateTimeOffset Created, DateTimeOffset Updated, int Attempts = 0, string? Error = null, Transcript? Result = null);
 
-public sealed class StateStore
+public sealed partial class StateStore
 {
     private readonly AppPaths paths;
     private readonly object sync = new();
@@ -18,8 +18,8 @@ public sealed class StateStore
         this.paths = paths; paths.Initialize();
         using var db = Open();
         var version = Convert.ToInt32(Scalar(db, "PRAGMA user_version"));
-        if (version > 2) throw new AppException("database_newer", "数据库版本较新，请使用兼容版本；未执行写入。", 503);
-        if (version < 2)
+        if (version > 3) throw new AppException("database_newer", "数据库版本较新，请使用兼容版本；未执行写入。", 503);
+        if (version < 3)
         {
             if (new FileInfo(paths.Database).Length > 0)
             {
@@ -30,6 +30,8 @@ public sealed class StateStore
             try
             {
                 Execute(db, "CREATE TABLE IF NOT EXISTS settings(id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS models(id TEXT PRIMARY KEY,json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,state TEXT NOT NULL,created TEXT NOT NULL,json TEXT NOT NULL); CREATE INDEX IF NOT EXISTS jobs_state_created ON jobs(state,created); CREATE INDEX IF NOT EXISTS jobs_created ON jobs(created DESC,id); CREATE INDEX IF NOT EXISTS jobs_expiry ON jobs(state,json_extract(json,'$.updated')); PRAGMA user_version=2;", transaction);
+                MigrateKeys(db, transaction);
+                Execute(db, "PRAGMA user_version=3", transaction);
                 transaction.Commit();
             }
             catch { paths.Log("database_migration_failed"); throw; }
@@ -57,6 +59,7 @@ public sealed class StateStore
     public Settings Settings { get { lock (sync) return Read<Settings>("settings", "1") ?? new(); } }
     public void SaveSettings(Settings value)
     {
+        if (!string.IsNullOrEmpty(value.ApiKey)) throw new AppException("legacy_key", "请在 API 密钥管理中添加密钥。");
         if (value.Port is < 1024 or > 65535 || value.IdleSeconds < 0 || value.RetentionDays < 1 || value.MaxQueued < 1 || value.MaxUploadBytes < 1 || value.MaxTemporaryBytes < value.MaxUploadBytes || value.MaxDurationSeconds is < 1 or > 14400 || value.MaxExecutionSeconds < 1)
             throw new AppException("invalid_settings", "端口、保留期或资源限制无效（最长音频 4 小时）。");
         if (value.Backend is not ("cpu" or "auto" or "cuda" or "vulkan")) throw new AppException("invalid_backend", "后端必须为 cpu/auto/cuda/vulkan。");
@@ -78,6 +81,7 @@ public sealed class StateStore
             using var reader = command.ExecuteReader(); var list = new List<Job>(); while (reader.Read()) list.Add(Wire.Decode<Job>(reader.GetString(0))); return list.ToArray();
         }
     }
+    public int TotalJobs() { lock (sync) { using var db = Open(); return Convert.ToInt32(Scalar(db, "SELECT count(*) FROM jobs")); } }
     public int Count(string state) { lock (sync) { using var db = Open(); using var command = db.CreateCommand(); command.CommandText = "SELECT count(*) FROM jobs WHERE state=$state"; command.Parameters.AddWithValue("$state", state); return Convert.ToInt32(command.ExecuteScalar()); } }
     public Job[] ExpiredBefore(DateTimeOffset cutoff)
     {

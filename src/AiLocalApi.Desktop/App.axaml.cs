@@ -29,6 +29,7 @@ public partial class App : Application
             }
             var menu = new NativeMenu();
             var state = new NativeMenuItem("正在启动") { IsEnabled = false };
+            api.Changed += () => Dispatcher.UIThread.Post(() => state.Header = api.Status);
             menu.Add(state);
             var open = new NativeMenuItem("打开管理窗口"); open.Click += (_, _) => ShowWindow(); menu.Add(open);
             var startup = new NativeMenuItem("登录时启动") { ToggleType = NativeMenuItemToggleType.CheckBox, IsChecked = LoginStartup.Enabled };
@@ -56,7 +57,7 @@ public partial class App : Application
     {
         if (window is null)
         {
-            window = new MainWindow(new MainViewModel(service!, api!.Status, api.Port));
+            window = new MainWindow(new MainViewModel(service!, api!));
             window.Closing += (_, e) => { if (!exiting) { e.Cancel = true; window.Hide(); } };
             lifetime!.MainWindow = window;
         }

@@ -13,3 +13,4 @@ try { $stream.Open((Join-Path $fixtures 'chinese.wav'),3); $voice.Voice = $voice
 finally { $stream.Close() }
 dotnet run --project "$root/tools/AiLocalApi.Verify" -- --fixtures $wave "$root/src/AiLocalApi.Desktop/bin/Debug/net10.0-windows/worker/ffmpeg"
 if ($LASTEXITCODE) { throw 'Fixture encoding failed' }
+& "$PSScriptRoot/prepare-multilingual.ps1"

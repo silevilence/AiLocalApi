@@ -11,7 +11,9 @@ internal static class HttpRegression
 {
     public static async Task RunAsync(string executable, string data, string audio, bool lockSession = false)
     {
-        var store = new StateStore(new(Path.GetFullPath(data))); store.SaveSettings(store.Settings with { Port = 17841, ApiKey = "local-verification-key", Backend = "cpu", IdleSeconds = 2 });
+        var store = new StateStore(new(Path.GetFullPath(data))); store.SaveSettings(store.Settings with { Port = 17841, Backend = "cpu", IdleSeconds = 2 });
+        if (!store.Authorize("Bearer local-verification-key")) store.CreateApiKey("验证客户端", "local-verification-key");
+        store.SetAllowAnonymous(false);
         var start = new ProcessStartInfo(Path.GetFullPath(executable)) { UseShellExecute = false, CreateNoWindow = true };
         start.ArgumentList.Add("--tray"); start.Environment["AILOCAL_DATA"] = Path.GetFullPath(data);
         var desktop = Process.Start(start)!;
@@ -23,10 +25,30 @@ internal static class HttpRegression
             Console.WriteLine($"Tray startup to health: {watch.Elapsed.TotalMilliseconds:F0} ms; working set {desktop.WorkingSet64}");
             Require((await http.GetAsync("/api/jobs")).StatusCode == HttpStatusCode.Unauthorized, "Bearer authentication");
             http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "local-verification-key");
+            var secondKey = store.CreateApiKey("第二客户端");
+            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", secondKey.Secret);
+            Require((await http.GetAsync("/v1/models")).IsSuccessStatusCode, "second key accepted");
+            store.SetApiKeyEnabled(secondKey.Info.Id, false);
+            Require((await http.GetAsync("/v1/models")).StatusCode == HttpStatusCode.Unauthorized, "disabled key rejected immediately");
+            store.SetAllowAnonymous(true);
+            Require((await http.GetAsync("/v1/models")).StatusCode == HttpStatusCode.Unauthorized, "invalid key rejected even with anonymous enabled");
+            http.DefaultRequestHeaders.Authorization = null;
+            Require((await http.GetAsync("/v1/models")).IsSuccessStatusCode, "anonymous enabled immediately");
+            store.SetAllowAnonymous(false); store.DeleteApiKey(secondKey.Info.Id);
+            Require((await http.GetAsync("/v1/models")).StatusCode == HttpStatusCode.Unauthorized, "anonymous disabled immediately");
+            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "local-verification-key");
             http.DefaultRequestHeaders.Add("Origin", "https://example.invalid");
             Require((await http.GetAsync("/api/jobs")).StatusCode == HttpStatusCode.Forbidden, "Origin guard"); http.DefaultRequestHeaders.Remove("Origin");
             var models = await http.GetStringAsync("/v1/models"); Require(models.Contains("whisper-1"), "Default alias");
             var sdk = new AudioClient("whisper-1", new ApiKeyCredential("local-verification-key"), new OpenAIClientOptions { Endpoint = new Uri("http://localhost:17841/v1") });
+            foreach (var language in new[] { "zh", "ja", "en", "ko" })
+            {
+                var fixture = Path.Combine(Path.GetDirectoryName(audio)!, $"fleurs-{language}.wav");
+                Require(File.Exists(fixture), $"{language} fixture exists; run prepare-multilingual.ps1");
+                var multilingual = await sdk.TranscribeAudioAsync(fixture, new AudioTranscriptionOptions { Language = language });
+                Require(!string.IsNullOrWhiteSpace(multilingual.Value.Text), $"official SDK {language} transcription");
+                Console.WriteLine($"SDK {language}: {multilingual.Value.Text}");
+            }
             var sdkResult = await sdk.TranscribeAudioAsync(audio, new AudioTranscriptionOptions { ResponseFormat = AudioTranscriptionFormat.Verbose, TimestampGranularities = AudioTimestampGranularities.Word | AudioTimestampGranularities.Segment });
             Require(sdkResult.Value.Words.Count > 0 && sdkResult.Value.Segments.Count > 0, "Official SDK timestamps");
             var chinese = Path.Combine(Path.GetDirectoryName(audio)!, "chinese.wav");
