@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AiLocalApi.Contracts/AiLocalApi.Contracts.csproj" />
+    <Project Path="src/AiLocalApi.Core/AiLocalApi.Core.csproj" />
+    <Project Path="src/AiLocalApi.Desktop/AiLocalApi.Desktop.csproj" />
+    <Project Path="src/AiLocalApi.Worker/AiLocalApi.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AiLocalApi.Tests/AiLocalApi.Tests.csproj" />
+  </Folder>
+</Solution>
