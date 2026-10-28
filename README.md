@@ -2,6 +2,8 @@
 
 Windows 11 x64 本地语音转写托盘应用。开发不需要安装包、Release、Python、Docker 或 Whisper/FFmpeg CLI。
 
+直接使用请下载 [最新正式版](https://github.com/silevilence/AiLocalApi/releases/latest)：`AiLocalApi-<版本>-win-x64-Setup.exe` 提供安装目录选择，`AiLocalApi-win-Portable.zip` 解压后运行根目录 `AiLocalApi.exe`。两种形式都包含运行时，无需安装 .NET SDK；安装版首次运行选择独立数据目录，绿色版默认保存到自身 `Data/`。登录自启默认关闭，应用会从 GitHub 检查更新并等待正在转写的任务完成后升级。
+
 统一入口：`scripts/dev.ps1` 启动开发实例，`scripts/test.ps1` 构建并测试，`scripts/publish.ps1` 发布自包含输出，`scripts/pack.ps1` 生成 NSIS / Velopack 双形态产物。固定工具、数据布局、更新策略及 Sandbox 验收命令见 [发行指南](docs/RELEASE.md)。
 
 安装 .NET SDK **10.0.301** 后，在仓库执行：

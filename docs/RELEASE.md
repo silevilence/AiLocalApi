@@ -55,6 +55,10 @@ AiLocalApi.Verify.exe --release "T:\绿色 中文" "T:\绿色 中文\Data" C:\In
 
 加 `--idle-update` 验证空闲升级；将目标版本改成 `failure` 可验证不可达源或损坏包。`failure <0.1.1 本地资产目录> --interrupt-feed` 会提供 0.1.2 测试索引并在包传输途中重置 TCP 连接，确认失败后旧版本仍能转写。移动副本后使用 `--existing` 验证原模型与历史路径迁移，不重新导入掩盖路径错误。
 
+在线验收先保留首个 Release 的实例与数据，再发布第二版。使用 `--idle-update --automatic-update --preserve-data --keep-startup-disabled`：不重新导入模型或重置设置，不发送 `--update`，等待应用启动后的定时检查；核对全部原设置、模型写入时间、历史结果及未开启的自启项均保持原状。省略本地源参数，让发行版读取自身 GitHub 更新源。
+
+如果验收网络需要现有 HTTP 代理，可只在启动验收进程的环境中设置 `HTTPS_PROXY`，并设置 `NO_PROXY=localhost,127.0.0.1,::1` 保持本地 API 直连。该配置随子进程继承，不改动发布文件或系统代理，也不使用代理替换 GitHub 更新源。
+
 SDK API 与打包参数依据 [Velopack Setup 参数](https://docs.velopack.io/reference/cli/content/setup-windows)、固定 1.2.161 NuGet XML API 文档及实际 `vpk pack --help`；目录页依据 [NSIS Modern UI](https://nsis.sourceforge.io/Docs/Modern%20UI%202/Readme.html)。
 
 ## GitHub 发布

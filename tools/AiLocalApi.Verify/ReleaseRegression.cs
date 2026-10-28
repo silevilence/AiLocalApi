@@ -16,8 +16,15 @@ internal static class ReleaseRegression
         var root = Path.GetFullPath(args[1]); var data = Path.GetFullPath(args[2]);
         var executable = Path.Combine(root, "current", "AiLocalApi.Desktop.exe");
         var store = new StateStore(new(data)); var models = new ModelManager(store);
-        if (!args.Contains("--existing")) { models.SetDirectory(Path.Combine(data, "models")); await models.ImportAsync(Path.Combine(args[3], "ggml-tiny.bin")); }
-        store.SaveSettings(store.Settings with { Port = 17842, DefaultModel = "tiny", IdleSeconds = 2, Backend = "cpu" });
+        if (!args.Contains("--preserve-data"))
+        {
+            if (!args.Contains("--existing")) { models.SetDirectory(Path.Combine(data, "models")); await models.ImportAsync(Path.Combine(args[3], "ggml-tiny.bin")); }
+            store.SaveSettings(store.Settings with { Port = 17842, DefaultModel = "tiny", IdleSeconds = 2, Backend = "cpu" });
+        }
+        var originalSettings = JsonSerializer.Serialize(store.Settings);
+        var originalModel = store.Model("tiny") ?? throw new Exception("Missing baseline model");
+        var originalModelWrite = File.GetLastWriteTimeUtc(originalModel.Path);
+        var originalResults = store.Jobs().Where(job => job.State == "succeeded").ToDictionary(job => job.Id, job => JsonSerializer.Serialize(job.Result));
         var profile = Path.Combine(root, "instance.json");
         var firstRun = !File.Exists(profile);
         if (firstRun) await File.WriteAllTextAsync(profile, JsonSerializer.Serialize(new { Id = Guid.NewGuid().ToString("N"), DataDirectory = args[6] == "portable" ? "Data" : data }));
@@ -64,7 +71,9 @@ internal static class ReleaseRegression
             }
             else if (args.Length > 7 && !args[7].StartsWith("--"))
             {
-                run.SetValue(startup, "\"T:\\stale\\AiLocalApi.exe\" --tray");
+                var keepStartupDisabled = args.Contains("--keep-startup-disabled");
+                if (keepStartupDisabled) Check(run.GetValue(startup) is null, "startup remains disabled before update");
+                else run.SetValue(startup, "\"T:\\stale\\AiLocalApi.exe\" --tray");
                 string? active = null, queued = null;
                 if (!args.Contains("--idle-update"))
                 {
@@ -88,7 +97,14 @@ internal static class ReleaseRegression
                 }
                 Check(store.Job(first)!.Result is not null, "previous result preserved");
                 Check(store.Settings.Port == 17842 && File.Exists(store.Model("tiny")!.Path), "settings and model preserved");
-                Check((string?)run.GetValue(startup) == $"\"{Path.Combine(root, "AiLocalApi.exe")}\" --tray", "startup repaired to stable path");
+                if (args.Contains("--preserve-data"))
+                {
+                    Check(JsonSerializer.Serialize(store.Settings) == originalSettings, "all original settings preserved");
+                    Check(store.Model("tiny") == originalModel && File.GetLastWriteTimeUtc(originalModel.Path) == originalModelWrite, "original model retained without reimport or download");
+                    Check(originalResults.All(pair => JsonSerializer.Serialize(store.Job(pair.Key)?.Result) == pair.Value), "all baseline results preserved");
+                }
+                if (keepStartupDisabled) Check(run.GetValue(startup) is null, "update does not enable startup without opt-in");
+                else Check((string?)run.GetValue(startup) == $"\"{Path.Combine(root, "AiLocalApi.exe")}\" --tray", "startup repaired to stable path");
                 await Job(http, await Submit(http, args[4]));
             }
             Console.WriteLine($"RESULT root={root}; data={data}; startup={startup}");

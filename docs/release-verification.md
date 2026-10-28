@@ -25,10 +25,23 @@
 
 ## GitHub 正式发行
 
+- 用户明确授权后，将 `silevilence/AiLocalApi` 从私有改为公开；在线 Sandbox 验收使用匿名访问，不复制账号凭据。
 - [v0.1.0](https://github.com/silevilence/AiLocalApi/releases/tag/v0.1.0) 已由 [Actions 40635162426](https://github.com/silevilence/AiLocalApi/actions/runs/40635162426) 成功发布，提交 `b5089fa13da60971c3632dbe6fa21f31d9d0eb24`。Windows runner 的 23 项测试、发布输出真实 CPU 转写/复用/卸载、NSIS 与更新资产版本检查均通过。
 - 首次发布作业在上传草稿后因按标签接口不返回草稿而失败，没有公开不完整版本。修正为认证列表查询后重跑成功；只在尚未发布时修正首版标签，发布后不改动标签或资产。
 - 已发布版本的只读重试预检返回 Already published，核对相同提交、正文和四项完整资产后跳过，不覆盖。CI 结果存于 `artifacts/release-results/ci-010/`。
 - 从实际 v0.1.0 Release 下载四项资产，全文件 SHA-256 与 GitHub 服务端摘要一致；安装外层、便携元数据、宿主与 Worker 版本均为 0.1.0。索引的 NotesMarkdown、Release 正文与对应 changelog 章节一致，没有包含旧版全文。当前连接的整流下载曾停滞，使用同一 GitHub 官方资产地址分段下载后通过完整摘要校验。
 - 正式 NSIS 包通过图形目录页安装到 `T:\GitHub Install`，首次运行选择独立 `T:\GitHub Data`；正式 Portable ZIP 解压到 `T:\GitHub 绿色`。两者在 Sandbox 均通过真实转写、单实例和正常退出检查，保留 0.1.0 实例等待第二版；安装注册记录为原选定路径和单个 Update.exe 卸载器。证据：`github-installed-baseline.txt`、`github-portable-baseline.txt`、`github-baseline-registry.json`。
 
-在线双形态升级结果在实际验收后追加。本地升级不替代在线更新验收。
+- [v0.1.1](https://github.com/silevilence/AiLocalApi/releases/tag/v0.1.1) 已由 [Actions 40637210287](https://github.com/silevilence/AiLocalApi/actions/runs/40637210287) 成功发布，提交 `d331a0b1b005a880740c7ea422e1eb6ddd171da4`。两版均具有四项完整资产；第二版正文与更新索引说明只包含 V0.1.1 的两条优化，CI 结果在 `ci-011/`。
+
+## 第二次 Release 在线自动升级
+
+- 原安装实例 `T:\GitHub Install` 与原绿色实例 `T:\GitHub 绿色` 均保留官方首版文件，从自身发行配置读取 GitHub 源，未覆盖更新源、未传入 token、未重新安装或手工复制更新包。分别等待启动后的定时检查，自行发现、下载、校验并升级至 0.1.1；验收工具没有发送手动更新命令。
+- 两者完整设置、原模型元数据和文件写入时间、首版历史结果及实例配置标识均保持不变；模型没有重新导入或下载。未开启的登录自启项仍不存在。升级后再次真实转写成功，正常退出释放端口。证据：`github-installed-upgrade.txt`、`github-portable-upgrade.txt`。
+- 两个实例实际下载的完整更新包 SHA-256 均与 GitHub 0.1.1 资产摘要相同；运行文件版本均为 `0.1.1+d331a0b1b005a880740c7ea422e1eb6ddd171da4`。绿色版保留 `.portable`，安装版原路径不变，系统仍只有一个卸载记录和一个开始菜单快捷方式；没有安装引导或 Worker 残留。证据：`github-final-versions.json`、`github-final-hashes.json`、`github-final-registration.json`、`github-installed-upgraded-registry.json`。
+- 实际打开升级后的管理界面，确认版本页显示安装版 0.1.1、原程序目录、原数据目录、GitHub 更新源与“当前已是最新版本”。
+- 网络边界：本次网络的 GitHub 大文件直连停滞时，首版 API 仍 accepting=true，版本仍为 0.1.0。随后仅为 Sandbox 验收进程配置本机已有 HTTP 代理及 localhost 的 NO_PROXY，原版通过代理完整下载并自动升级成功；没有更改系统代理、TLS 信任、客户端文件或 GitHub 源，也没有带入账号凭据。不能把这次结果表述成该网络直连大文件也已通过。
+
+## 整体审核与回归
+
+已按 ROADMAP 九项需求复核开发入口、数据隔离、安装/卸载、更新收尾、失败恢复、版本说明、发布凭据与资产完整性。最后一次 Release 构建无警告或错误，23 项自动化测试、两版本说明提取与拒绝用例、actionlint 均通过；两次 Actions 的 CPU 与打包检查、Sandbox 本地和 GitHub 双形态升级都通过。未发现阻塞项。CUDA 真机仍属于未实测硬件边界，不以 CI/Sandbox 的 CPU 验收替代。
