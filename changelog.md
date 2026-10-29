@@ -1,5 +1,18 @@
 # Change Log
 
+## V0.2.0
+
+### ✨ 新功能
+
+- 扩展模型下载目录，提供 tiny、base、small、medium、large-v1/v2/v3 和 large-v3-turbo，包含英语专用、多语言及不同量化选项，共 33 个 whisper.cpp 模型和 12 个 CTranslate2 模型包。
+- 新增通过 C++ 接口运行的 CTranslate2 引擎，无需安装 Python；支持 CPU 转写、英文翻译、长音频和词时间戳。本次发行提供 whisper.cpp CPU/Vulkan 与 CTranslate2 CPU，CUDA 实机尚未验收。
+- 模型页支持按引擎、档位、语言和量化筛选，展示下载大小；可下载或导入完整 CTranslate2 模型包，逐文件校验后安装，支持取消、重试和断点续传。
+- 可设置 CTranslate2 计算精度并查看实际运行的引擎、后端和精度；API 支持选择两种引擎的模型，保留原有模型名称和默认模型别名。
+
+### 🚀 优化
+
+- 提交前检查模型的语言与翻译能力，明确提示英语专用模型、turbo 翻译及粤语支持范围，减少无效任务。
+
 ## V0.1.1
 
 ### 🚀 优化
