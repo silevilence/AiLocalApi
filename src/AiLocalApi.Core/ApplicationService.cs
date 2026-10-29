@@ -190,6 +190,13 @@ public sealed class ApplicationService : IAsyncDisposable
         if (!await execution.WaitAsync(0)) throw new AppException("model_busy", "任务正在执行，结束后才能卸载模型。", 409);
         try { await UnloadCoreAsync(); } finally { execution.Release(); }
     }
+    internal async Task<string> RunModelDiagnosticAsync(Func<CancellationToken, Task<string>> diagnostic, CancellationToken token)
+    {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, stop.Token);
+        if (!await execution.WaitAsync(0, linked.Token)) throw new AppException("model_busy", "任务正在执行，请结束后再测试推理后端。", 409);
+        try { await UnloadCoreAsync(); return await diagnostic(linked.Token); }
+        finally { execution.Release(); }
+    }
     public async Task DrainForUpdateAsync(CancellationToken token = default)
     {
         draining = true;

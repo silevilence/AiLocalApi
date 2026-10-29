@@ -8,23 +8,26 @@ namespace AiLocalApi.Core;
 
 public static class ConnectionDiagnostics
 {
-    public static async Task<string> TestBackendAsync(ApplicationService service, string backend, CancellationToken token, string engine = InferenceEngines.WhisperCpp, string computeType = "default")
+    public static Task<string> TestBackendAsync(ApplicationService service, string backend, CancellationToken token, string engine = InferenceEngines.WhisperCpp, string computeType = "default")
     {
         if (!InferenceEngines.SupportsBackend(engine, backend) || !InferenceEngines.SupportsComputeType(engine, backend, computeType)) throw new AppException("invalid_backend", "请选择引擎支持的后端与精度。");
+        return service.RunModelDiagnosticAsync(async diagnosticToken =>
+        {
         var model = service.Models.Installed.Where(m => m.Engine == engine).OrderBy(model => model.Size).FirstOrDefault()
             ?? throw new AppException("model_required", "请先在模型页下载或导入一个模型，再测试实际加载能力。");
         using var lease = service.Models.Acquire(model.Id);
-        await ModelManager.VerifyAsync(model.Path, ModelManager.Catalog.Single(m => m.Id == model.Id), token);
+        await ModelManager.VerifyAsync(model.Path, ModelManager.Catalog.Single(m => m.Id == model.Id), diagnosticToken);
         await using var worker = new WorkerClient();
         var clock = Stopwatch.StartNew();
         string? fallback = null;
-        try { await worker.SendAsync(new(Guid.NewGuid().ToString("N"), "load", ModelPath: model.Path, Backend: backend, Engine: engine, ComputeType: computeType), cancellationToken: token); }
-        catch (Exception error) when (backend == "auto" && !token.IsCancellationRequested)
+        try { await worker.SendAsync(new(Guid.NewGuid().ToString("N"), "load", ModelPath: model.Path, Backend: backend, Engine: engine, ComputeType: computeType), cancellationToken: diagnosticToken); }
+        catch (Exception error) when (backend == "auto" && !diagnosticToken.IsCancellationRequested)
         {
             fallback = error.Message; await worker.DisposeAsync();
-            await worker.SendAsync(new(Guid.NewGuid().ToString("N"), "load", ModelPath: model.Path, Backend: "cpu", Engine: engine, ComputeType: computeType), cancellationToken: token);
+            await worker.SendAsync(new(Guid.NewGuid().ToString("N"), "load", ModelPath: model.Path, Backend: "cpu", Engine: engine, ComputeType: computeType), cancellationToken: diagnosticToken);
         }
         return $"可用 · {worker.Engine} · 实际后端 {worker.Backend} · 精度 {worker.ComputeType} · 模型 {model.Id} · {clock.Elapsed.TotalSeconds:F1} 秒\n{worker.BackendDetails}{(fallback is null ? "" : "\n自动回退 CPU：" + fallback)}";
+        }, token);
     }
 
     public static async Task<string> TestSourceAsync(string host, CancellationToken token, HttpClient? client = null)

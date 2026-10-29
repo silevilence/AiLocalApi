@@ -7,6 +7,27 @@ namespace AiLocalApi.Tests;
 public class EngineContractTests
 {
     [Fact]
+    public async Task BackendDiagnosticReservesTheDispatcherUntilItsWorkerIsReleased()
+    {
+        var paths = new AppPaths(Path.Combine(Path.GetTempPath(), "AiLocalApi-tests", Guid.NewGuid().ToString("N")));
+        await using var service = new ApplicationService(paths);
+        var file = Path.Combine(paths.Data, "fixture.bin"); await File.WriteAllBytesAsync(file, [1]);
+        service.Store.SaveModel(new("tiny", file, "test", 1, true, "F16", "test"));
+        var entered = new TaskCompletionSource(); var finish = new TaskCompletionSource<string>();
+        var diagnostic = service.RunModelDiagnosticAsync(async token => { entered.SetResult(); return await finish.Task.WaitAsync(token); }, default);
+        await Task.WhenAny(entered.Task, diagnostic);
+        if (diagnostic.IsCompleted) await diagnostic;
+        await entered.Task;
+        try
+        {
+            var job = await service.SubmitAsync(new MemoryStream([1]), "audio.wav", "tiny", new());
+            await Task.Delay(100);
+            Assert.Equal("queued", service.Get(job.Id).State); Assert.Null(service.Worker.ProcessId);
+            Assert.Equal("model_busy", (await Assert.ThrowsAsync<AppException>(() => service.UnloadAsync())).Code);
+        }
+        finally { finish.TrySetResult("done"); await diagnostic; }
+    }
+    [Fact]
     public async Task AliasBindsModelAndEngineBeforeDefaultChanges()
     {
         var paths = new AppPaths(Path.Combine(Path.GetTempPath(), "AiLocalApi-tests", Guid.NewGuid().ToString("N")));

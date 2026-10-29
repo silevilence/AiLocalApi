@@ -146,6 +146,7 @@ internal static class EngineRegression
         var next = await service.SubmitFileAsync(audio, modelId, new(Language: "en", Prompt: "Speech", Temperature: 0));
         if ((await service.WaitAsync(next.Id, timeout.Token)).State != "succeeded" || service.LoadCount != count) throw new Exception("Model reuse failed");
         while (service.Worker.ProcessId is not null) await Task.Delay(100, timeout.Token);
+        Console.WriteLine(await ConnectionDiagnostics.TestBackendAsync(service, "cpu", timeout.Token, entry.Engine, entry.IsBundle ? "int8" : "default"));
         Console.WriteLine("PASS: CPU transcription, detection, prompt, native alignment, reuse and idle release.");
     }
 }
