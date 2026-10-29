@@ -16,6 +16,10 @@ curl.exe -X POST http://localhost:17840/api/jobs/JOB_ID/retry -H "Authorization:
 
 ## Whisper 兼容
 
+模型可以来自 `whisper.cpp` 或 `ctranslate2`。旧 ID（例如 `tiny`）保持不变；CTranslate2 模型 ID 带 `ct2-` 前缀（例如 `ct2-tiny`）。`GET /v1/models` 返回每个已安装模型的 `engine`、`multilingual`、`supports_translation`、`quantization`；`whisper-1.alias_of` 仍表示本地默认模型，任务提交时固定该模型与引擎。异步任务增加 `engine` 字段。两种引擎使用同一套接口、输出格式和鉴权规则。
+
+`large-v3-turbo` 及其量化版、CTranslate2 对应版本支持多语言转写，但不支持翻译为英文；翻译请求返回 `model_translation`。英语专用模型仍返回 `model_language`。完整能力和后端限制见 [模型与推理引擎](SPEECH-ENGINES.md)。
+
 `POST /v1/audio/transcriptions` 和 `POST /v1/audio/translations` 使用 multipart `file`、`model`；同步等待最终结果。翻译含义是输出英文，英语专用模型不支持翻译。`GET /v1/models` 列出已安装模型，`whisper-1.alias_of` 公开本地默认模型 ID。
 
 | 参数 | 转写 | 翻译 |

@@ -83,6 +83,7 @@ jobs:
           path: |
             artifacts/test-results/*.trx
             artifacts/ci-cpu.txt
+            artifacts/ci-ct2.txt
 
   publish:
     needs: build

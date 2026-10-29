@@ -6,7 +6,7 @@ Windows 11 x64 本地语音转写托盘应用。开发不需要安装包、Relea
 
 统一入口：`scripts/dev.ps1` 启动开发实例，`scripts/test.ps1` 构建并测试，`scripts/publish.ps1` 发布自包含输出，`scripts/pack.ps1` 生成 NSIS / Velopack 双形态产物。固定工具、数据布局、更新策略及 Sandbox 验收命令见 [发行指南](docs/RELEASE.md)。
 
-安装 .NET SDK **10.0.301** 后，在仓库执行：
+开发构建需要 .NET SDK **10.0.301**、Visual Studio 2022 C++ 与 CMake 组件、Git；运行发行包无需这些工具。在仓库执行：
 
 ```powershell
 dotnet restore AiLocalApi.slnx --locked-mode
@@ -18,9 +18,11 @@ dotnet test AiLocalApi.slnx --no-build
 
 宿主、核心应用服务、通信契约、推理 Worker 和测试分别位于 `src/`、`tests/`。Worker 通过当前用户专用命名管道连接，父进程消失时自动退出。`AILOCAL_DATA` 可指定数据绝对路径，`AILOCAL_WORKER` 可覆盖 Worker 可执行文件路径。日志只记录诊断代码和任务 ID，不记录音频、提示或转写文本。
 
-首次运行在「模型」页选择目录，再下载 tiny / tiny.en / base，或导入目录支持的官方 F16 文件。默认源无法连接时，可在「设置」选择 hf-mirror.com，点击“测试下载源”检查后保存，所有来源都校验固定 SHA-256。设置默认模型后在「转写任务」选择/拖入音频；可取消、重试、导出五种格式。窗口关闭后继续处理，退出请使用托盘「退出」。模型目录更改只影响未来下载，不隐式搬移已安装文件。
+首次运行在「模型」页选择目录，再按引擎、档位、语言及量化选择模型；whisper.cpp 导入 .bin，CTranslate2 导入完整模型包目录。详见 [模型与推理引擎](docs/SPEECH-ENGINES.md)。默认源无法连接时，可在「设置」选择 hf-mirror.com，点击“测试下载源”检查后保存，所有来源都校验固定 SHA-256。设置默认模型后在「转写任务」选择/拖入音频；可取消、重试、导出五种格式。窗口关闭后继续处理，退出请使用托盘「退出」。模型目录更改只影响未来下载，不隐式搬移已安装文件。
 
-开发机需要 VC++ 2015–2022 x64 Redistributable（包含 CRT/OpenMP）；自包含验证包通过 `scripts/publish-sandbox.ps1 -VcRedist <MSVC Redist x64目录>` 把允许分发的 DLL 置于 Worker 目录，Sandbox 无需安装 .NET 或编译工具。默认 CPU/Vulkan 构建，CUDA 构建使用 `./scripts/build.ps1 -EnableCuda`，需要 NVIDIA 驱动；该选项会还原对应精确版本的运行库。
+45 个模型的 CPU 兼容性、性能观察与发行验证见 [双引擎验收记录](docs/dual-engine-verification.md)；CUDA 实机仍未验收。
+
+开发机需要 VC++ 2015–2022 x64 Redistributable（包含 CRT/OpenMP）；自包含验证包通过 `scripts/publish-sandbox.ps1 -VcRedist <MSVC Redist x64目录>` 把允许分发的 DLL 置于 Worker 目录，Sandbox 无需安装 .NET 或编译工具。默认提供 whisper.cpp CPU/Vulkan 与 CTranslate2 CPU。`./scripts/build.ps1 -EnableCuda` 还原 Whisper.net CUDA 运行库并从源码构建 CTranslate2 CUDA，后者额外需要兼容的 CUDA/cuDNN 开发环境；运行需要 NVIDIA 驱动，该硬件路径尚未验收。
 
 「设置」可实际测试所选推理后端；需先安装一个模型，测试使用独立 Worker，结束后释放资源。修改端口后点击“应用端口并重启 API”，不必退出应用；切换到被占用的端口会保留原服务。
 

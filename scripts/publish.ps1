@@ -15,6 +15,7 @@ foreach ($group in 'Microsoft.VC143.CRT', 'Microsoft.VC143.OPENMP') {
     if (!(Test-Path -LiteralPath "$VcRedist/$group")) { throw "Missing redistributable: $VcRedist/$group" }
 }
 & "$PSScriptRoot/setup-native.ps1"
+& "$PSScriptRoot/setup-ctranslate2.ps1"
 dotnet restore "$root/AiLocalApi.slnx" --locked-mode
 if ($LASTEXITCODE) { throw 'Locked restore failed' }
 foreach ($item in @(@('src/AiLocalApi.Desktop','app'), @('src/AiLocalApi.Worker','app/worker'), @('tools/AiLocalApi.Verify','verify'))) {

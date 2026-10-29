@@ -10,3 +10,6 @@ $env:AILOCAL_WORKER = [IO.Path]::GetFullPath("$PublishDirectory/app/worker/AiLoc
 & "$PublishDirectory/verify/AiLocalApi.Verify.exe" "$root/artifacts/ci-data" "$root/artifacts/ci-models" $audio cpu --download --report "$root/artifacts/ci-cpu.txt"
 if ($LASTEXITCODE) { throw 'Published CPU inference/reuse/unload failed; see ci-cpu.txt' }
 Get-Content "$root/artifacts/ci-cpu.txt"
+& "$PublishDirectory/verify/AiLocalApi.Verify.exe" --engine "$root/artifacts/ci-ct2-data" "$root/artifacts/ci-models" $audio ct2-tiny --report "$root/artifacts/ci-ct2.txt"
+if ($LASTEXITCODE) { throw 'Published CTranslate2 CPU inference failed; see ci-ct2.txt' }
+Get-Content "$root/artifacts/ci-ct2.txt"
