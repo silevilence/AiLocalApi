@@ -243,10 +243,10 @@
     - Blocked by: 扩展 whisper.cpp 模型档位与量化下载目录
     - 决定记录（2026-10-29）：用户确认先补充任务，并采用 C++ 接口接入。保留 whisper.cpp 作为默认引擎；新增 CTranslate2 原生路径，自行实现所需的 Whisper 转写流程，不引入 Python 运行时或原始 PyTorch Whisper 引擎。CTranslate2 与 Faster Whisper 的关系及能力差异须在文档中说明，不承诺输出逐字一致。参考：[CTranslate2](https://github.com/OpenNMT/CTranslate2)、[Faster Whisper](https://github.com/SYSTRAN/faster-whisper)。
 
-- [ ] **通过 C++ 接口接入 CTranslate2 CPU 推理**
-    - [ ] 在独立 Worker 中通过原生桥接调用 CTranslate2 C++ API，完成真实 Whisper 模型的加载、一次推理和释放；不调用 Python、Whisper CLI 或外部推理服务。
-    - [ ] 固定 CTranslate2、桥接接口和 Windows x64 原生依赖版本，提供可重复的本地构建入口；原生异常转为可诊断错误，资源所有权与释放行为明确。
-    - [ ] 以 CPU 为必需基线，提供所选版本支持的计算精度，公开实际使用精度；不支持的指令集或精度请求给出明确错误或可见的自动选择结果。
+- [x] **通过 C++ 接口接入 CTranslate2 CPU 推理**
+    - [x] 在独立 Worker 中通过原生桥接调用 CTranslate2 C++ API，完成真实 Whisper 模型的加载、一次推理和释放；不调用 Python、Whisper CLI 或外部推理服务。
+    - [x] 固定 CTranslate2、桥接接口和 Windows x64 原生依赖版本，提供可重复的本地构建入口；原生异常转为可诊断错误，资源所有权与释放行为明确。
+    - [x] 以 CPU 为必需基线，提供所选版本支持的计算精度，公开实际使用精度；不支持的指令集或精度请求给出明确错误或可见的自动选择结果。
     - 验收：无需 Python 的 Windows 环境可通过 Worker 加载已校验模型并返回真实推理结果；重复加载释放不持续泄漏，缺失依赖和损坏模型不会导致桌面宿主退出；保留可复现构建与运行记录。
     - Blocked by: 建立多推理引擎的模型标识与能力契约
 
