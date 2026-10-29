@@ -48,11 +48,11 @@ internal static class ApiRoutes
     }
     private static object[] ModelList(ApplicationService service)
     {
-        var models = service.Models.Installed.Select(model => (object)new { id = model.Id, @object = "model", created = 0, owned_by = "local" }).ToList();
+        var models = service.Models.Installed.Select(model => (object)new { id = model.Id, @object = "model", created = 0, owned_by = "local", engine = model.Engine, multilingual = model.Multilingual, supports_translation = model.SupportsTranslation, quantization = model.Quantization }).ToList();
         if (service.Store.Settings.DefaultModel is { } id && service.Models.Installed.Any(m => m.Id == id)) models.Add(new { id = "whisper-1", @object = "model", created = 0, owned_by = "local", alias_of = id });
         return models.ToArray();
     }
-    private static object PublicJob(Job job) => new { id = job.Id, model = job.Model, state = job.State, stage = job.Stage, created = job.Created, updated = job.Updated, attempts = job.Attempts, error = job.Error, result_url = job.State == "succeeded" ? $"/api/jobs/{job.Id}/result" : null };
+    private static object PublicJob(Job job) => new { id = job.Id, model = job.Model, engine = job.Engine, state = job.State, stage = job.Stage, created = job.Created, updated = job.Updated, attempts = job.Attempts, error = job.Error, result_url = job.State == "succeeded" ? $"/api/jobs/{job.Id}/result" : null };
     private sealed record Input(IFormFile File, string Model, TranscriptionOptions Options, string Format, bool Segments);
     private static async Task<Input> ParseAsync(HttpContext context, bool translate)
     {

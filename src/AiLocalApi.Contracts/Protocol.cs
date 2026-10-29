@@ -13,5 +13,5 @@ public sealed record TranscriptionOptions(string? Language = null, string? Promp
 public sealed record Word(string Text, double Start, double End);
 public sealed record Segment(string Text, double Start, double End);
 public sealed record Transcript(string Text, Segment[] Segments, Word[] Words, double Duration, string? Language);
-public sealed record WorkerRequest(string Id, string Command, string? ModelPath = null, string? AudioPath = null, TranscriptionOptions? Options = null, string Backend = "cpu", int MaxDurationSeconds = 7200);
-public sealed record WorkerReply(string Id, string Kind, string? Stage = null, string? Error = null, Transcript? Result = null, string? Backend = null, int LoadCount = 0, string? BackendDetails = null);
+public sealed record WorkerRequest(string Id, string Command, string? ModelPath = null, string? AudioPath = null, TranscriptionOptions? Options = null, string Backend = "cpu", int MaxDurationSeconds = 7200, string Engine = InferenceEngines.WhisperCpp, string ComputeType = "default");
+public sealed record WorkerReply(string Id, string Kind, string? Stage = null, string? Error = null, Transcript? Result = null, string? Backend = null, int LoadCount = 0, string? BackendDetails = null, string Engine = InferenceEngines.WhisperCpp, string? ComputeType = null);

@@ -25,6 +25,7 @@ public sealed class ApplicationService : IAsyncDisposable
     private string? activeJob;
     private IDisposable? modelLease;
     private string? backend;
+    private string? loadedComputeType;
     private string effectiveBackend = "cpu";
     private DateTimeOffset lastUse = DateTimeOffset.UtcNow;
     private DateTimeOffset nextCleanup = DateTimeOffset.MinValue;
@@ -57,7 +58,11 @@ public sealed class ApplicationService : IAsyncDisposable
             using (reservation)
             {
                 if (!model.Multilingual && (options.Translate || options.Language is not (null or "en"))) throw new AppException("model_language", "英语专用模型不支持该语言或翻译。");
+                if (options.Translate && !model.SupportsTranslation) throw new AppException("model_translation", "该模型不支持翻译成英文，请选择非 turbo 的多语言模型。");
                 var settings = Store.Settings;
+                var selectedBackend = model.Engine == InferenceEngines.CTranslate2 ? settings.CTranslateBackend : settings.Backend;
+                var selectedPrecision = model.Engine == InferenceEngines.CTranslate2 ? settings.CTranslateComputeType : "default";
+                if (!InferenceEngines.SupportsBackend(model.Engine, selectedBackend) || !InferenceEngines.SupportsComputeType(model.Engine, selectedBackend, selectedPrecision)) throw new AppException("model_backend", "模型引擎与后端或精度不兼容。");
                 if (Store.Count("queued") >= settings.MaxQueued) throw new AppException("queue_full", "任务队列已满。", 429);
                 var existing = Directory.EnumerateFiles(Paths.Temporary, "*", SearchOption.AllDirectories).Sum(file => new FileInfo(file).Length);
                 Directory.CreateDirectory(directory);
@@ -76,7 +81,7 @@ public sealed class ApplicationService : IAsyncDisposable
                     if (length == 0) throw new AppException("empty_audio", "音频为空。");
                 }
                 token.ThrowIfCancellationRequested();
-                var now = DateTimeOffset.UtcNow; var job = new Job(id, model.Id, input, options, "queued", "queued", now, now);
+                var now = DateTimeOffset.UtcNow; var job = new Job(id, model.Id, input, options, "queued", "queued", now, now, Engine: model.Engine);
                 Store.AddJob(job, settings.MaxQueued); accepted = true; wake.Writer.TryWrite(true); return job;
             }
         }
@@ -143,26 +148,30 @@ public sealed class ApplicationService : IAsyncDisposable
         {
             cts.Token.ThrowIfCancellationRequested();
             var settings = Store.Settings;
-            if (LoadedModel != job.Model || backend != settings.Backend || Worker.ProcessId is null)
+            var executionModel = Models.Require(job.Model);
+            if (executionModel.Engine != job.Engine) throw new AppException("model_engine", "任务绑定的推理引擎与已安装模型不一致。", 409);
+            var selectedBackend = job.Engine == InferenceEngines.CTranslate2 ? settings.CTranslateBackend : settings.Backend;
+            var selectedPrecision = job.Engine == InferenceEngines.CTranslate2 ? settings.CTranslateComputeType : "default";
+            if (LoadedModel != job.Model || backend != selectedBackend || loadedComputeType != selectedPrecision || Worker.ProcessId is null)
             {
                 await UnloadCoreAsync();
                 ModelState = "loading"; modelLease = Models.Acquire(job.Model);
                 Store.Change(job.Id, current => current.State == "running" ? current with { Stage = "loading" } : null);
                 var model = Models.Require(job.Model);
                 await ModelManager.VerifyAsync(model.Path, ModelManager.Catalog.Single(item => item.Id == model.Id), cts.Token);
-                effectiveBackend = settings.Backend;
+                effectiveBackend = selectedBackend;
                 WorkerReply loaded;
-                try { loaded = await Worker.SendAsync(new(job.Id, "load", model.Path, Backend: effectiveBackend), cancellationToken: cts.Token); }
-                catch (Exception error) when (settings.Backend == "auto" && !cts.IsCancellationRequested && error is AppException or IOException)
+                try { loaded = await Worker.SendAsync(new(job.Id, "load", model.Path, Backend: effectiveBackend, Engine: job.Engine, ComputeType: selectedPrecision), cancellationToken: cts.Token); }
+                catch (Exception error) when (selectedBackend == "auto" && !cts.IsCancellationRequested && error is AppException or IOException)
                 {
                     await Worker.DisposeAsync(); effectiveBackend = "cpu";
                     LastError = "自动 GPU 初始化失败，已回退 CPU：" + error.Message;
-                    loaded = await Worker.SendAsync(new(job.Id, "load", model.Path, Backend: effectiveBackend), cancellationToken: cts.Token);
+                    loaded = await Worker.SendAsync(new(job.Id, "load", model.Path, Backend: effectiveBackend, Engine: job.Engine, ComputeType: selectedPrecision), cancellationToken: cts.Token);
                 }
-                LoadedModel = job.Model; backend = settings.Backend; ModelState = "loaded"; LoadCount += loaded.LoadCount;
-                if (settings.Backend == "auto" && loaded.Backend == "cpu" && effectiveBackend == "auto") LastError = "自动模式未找到可用 GPU 运行库，当前使用 CPU。";
+                LoadedModel = job.Model; backend = selectedBackend; loadedComputeType = selectedPrecision; ModelState = "loaded"; LoadCount += loaded.LoadCount;
+                if (selectedBackend == "auto" && loaded.Backend == "cpu" && effectiveBackend == "auto") LastError = "自动模式未找到可用 GPU 运行库，当前使用 CPU。";
             }
-            var result = await Worker.SendAsync(new(job.Id, "transcribe", Models.Require(job.Model).Path, job.Input, job.Options, effectiveBackend, settings.MaxDurationSeconds),
+            var result = await Worker.SendAsync(new(job.Id, "transcribe", Models.Require(job.Model).Path, job.Input, job.Options, effectiveBackend, settings.MaxDurationSeconds, job.Engine, selectedPrecision),
                 progress => Store.Change(job.Id, current => current.State == "running" ? current with { Stage = progress.Stage ?? "running" } : null), cts.Token);
             Store.Change(job.Id, current => current.State == "running" ? current with { State = "succeeded", Stage = "completed", Result = result.Result, Error = null } : null);
             Paths.Log("job_succeeded", job.Id);

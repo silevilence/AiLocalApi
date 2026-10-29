@@ -3,9 +3,12 @@ using Microsoft.Data.Sqlite;
 
 namespace AiLocalApi.Core;
 
-public sealed record Settings(string? ModelDirectory = null, string? DefaultModel = null, int Port = 17840, int IdleSeconds = 300, bool KeepLoaded = false, string Backend = "cpu", string? ApiKey = null, int RetentionDays = 7, long MaxUploadBytes = 536870912, int MaxDurationSeconds = 7200, int MaxQueued = 100, long MaxTemporaryBytes = 2147483648, int MaxExecutionSeconds = 7200, string DownloadHost = "huggingface.co");
-public sealed record ModelInfo(string Id, string Path, string Sha256, long Size, bool Multilingual, string Quantization, string Source);
-public sealed record Job(string Id, string Model, string Input, TranscriptionOptions Options, string State, string Stage, DateTimeOffset Created, DateTimeOffset Updated, int Attempts = 0, string? Error = null, Transcript? Result = null);
+public sealed record Settings(string? ModelDirectory = null, string? DefaultModel = null, int Port = 17840, int IdleSeconds = 300, bool KeepLoaded = false, string Backend = "cpu", string? ApiKey = null, int RetentionDays = 7, long MaxUploadBytes = 536870912, int MaxDurationSeconds = 7200, int MaxQueued = 100, long MaxTemporaryBytes = 2147483648, int MaxExecutionSeconds = 7200, string DownloadHost = "huggingface.co", string CTranslateBackend = "cpu", string CTranslateComputeType = "default");
+public sealed record ModelInfo(string Id, string Path, string Sha256, long Size, bool Multilingual, string Quantization, string Source, string Engine = InferenceEngines.WhisperCpp)
+{
+    public bool SupportsTranslation => Multilingual && !Id.Contains("turbo", StringComparison.Ordinal);
+}
+public sealed record Job(string Id, string Model, string Input, TranscriptionOptions Options, string State, string Stage, DateTimeOffset Created, DateTimeOffset Updated, int Attempts = 0, string? Error = null, Transcript? Result = null, string Engine = InferenceEngines.WhisperCpp);
 
 public sealed partial class StateStore
 {
@@ -63,6 +66,7 @@ public sealed partial class StateStore
         if (value.Port is < 1024 or > 65535 || value.IdleSeconds < 0 || value.RetentionDays < 1 || value.MaxQueued < 1 || value.MaxUploadBytes < 1 || value.MaxTemporaryBytes < value.MaxUploadBytes || value.MaxDurationSeconds is < 1 or > 14400 || value.MaxExecutionSeconds < 1)
             throw new AppException("invalid_settings", "端口、保留期或资源限制无效（最长音频 4 小时）。");
         if (value.Backend is not ("cpu" or "auto" or "cuda" or "vulkan")) throw new AppException("invalid_backend", "后端必须为 cpu/auto/cuda/vulkan。");
+        if (!InferenceEngines.SupportsBackend(InferenceEngines.CTranslate2, value.CTranslateBackend) || !InferenceEngines.SupportsComputeType(InferenceEngines.CTranslate2, value.CTranslateBackend, value.CTranslateComputeType)) throw new AppException("invalid_backend", "CTranslate2 后端或计算精度组合不受支持。");
         if (value.DownloadHost is not ("huggingface.co" or "hf-mirror.com")) throw new AppException("invalid_download_host", "请选择支持的模型下载源。");
         lock (sync) Write("settings", "1", value);
     }

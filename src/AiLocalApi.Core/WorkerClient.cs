@@ -14,6 +14,8 @@ public sealed class WorkerClient : IAsyncDisposable
     public int? ProcessId => process is { HasExited: false } ? process.Id : null;
     public string Backend { get; private set; } = "not loaded";
     public string BackendDetails { get; private set; } = "";
+    public string Engine { get; private set; } = InferenceEngines.WhisperCpp;
+    public string ComputeType { get; private set; } = "default";
     public async Task<WorkerReply> SendAsync(WorkerRequest request, Action<WorkerReply>? progress = null, CancellationToken cancellationToken = default)
     {
         await gate.WaitAsync(cancellationToken);
@@ -42,6 +44,7 @@ public sealed class WorkerClient : IAsyncDisposable
                 if (reply.Id != request.Id) throw new IOException("Worker correlation mismatch");
                 if (reply.Backend is not null) Backend = reply.Backend;
                 if (reply.BackendDetails is not null) BackendDetails = reply.BackendDetails;
+                if (reply.Kind == "done") { Engine = reply.Engine; ComputeType = reply.ComputeType ?? "default"; }
                 if (reply.Kind == "progress") { progress?.Invoke(reply); continue; }
                 cancellationToken.ThrowIfCancellationRequested();
                 if (reply.Kind == "error") throw new AppException("worker_error", reply.Error ?? "Worker failed", 422);
