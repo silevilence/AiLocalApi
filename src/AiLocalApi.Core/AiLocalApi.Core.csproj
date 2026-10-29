@@ -1,1 +1,1 @@
-<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="../AiLocalApi.Contracts/AiLocalApi.Contracts.csproj"/><PackageReference Include="Microsoft.Data.Sqlite"/></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="../AiLocalApi.Contracts/AiLocalApi.Contracts.csproj"/><PackageReference Include="Microsoft.Data.Sqlite"/><EmbeddedResource Include="ctranslate2-catalog.json"/></ItemGroup></Project>

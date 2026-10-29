@@ -1,0 +1,396 @@
+[
+  {
+    "repository": "Systran/faster-whisper-tiny",
+    "engine": "ctranslate2",
+    "size": 78203619,
+    "id": "ct2-tiny",
+    "sha256": "dcb76c6586fc06cbdac6dd21f14cfd129cc4cdd9dce19bf4ffa62e59cbe6e6d1",
+    "multilingual": true,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2249,
+        "sha256": "a73a28cdfe1c43ccc7202fa333d1f89c202477271407ae9a7f19afa52039cac8"
+      },
+      {
+        "name": "model.bin",
+        "size": 75538270,
+        "sha256": "dcb76c6586fc06cbdac6dd21f14cfd129cc4cdd9dce19bf4ffa62e59cbe6e6d1"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2203239,
+        "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"
+      },
+      {
+        "name": "vocabulary.txt",
+        "size": 459861,
+        "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+      }
+    ],
+    "revision": "d90ca5fe260221311c53c58e660288d3deb8d356"
+  },
+  {
+    "repository": "Systran/faster-whisper-tiny.en",
+    "engine": "ctranslate2",
+    "size": 78090594,
+    "id": "ct2-tiny.en",
+    "sha256": "1a5afae06a4db91c975c9a9d78be5cc110ee4ea022ad57d55492e4550e936b2a",
+    "multilingual": false,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2317,
+        "sha256": "14b1b421a90349bc551b881461426b561a874049cb9e4c4864f2ca384f6a7cc5"
+      },
+      {
+        "name": "model.bin",
+        "size": 75537502,
+        "sha256": "1a5afae06a4db91c975c9a9d78be5cc110ee4ea022ad57d55492e4550e936b2a"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2128466,
+        "sha256": "929c5252409436dce1b38a75d1abbcb5e132d170d8e324e4e04ed915fa2d22df"
+      },
+      {
+        "name": "vocabulary.txt",
+        "size": 422309,
+        "sha256": "ff77588746d3a2595d32ab5b69ffd7b95ce2441ac57533cb66fc3eb575a115cf"
+      }
+    ],
+    "revision": "0d3d19a32d3338f10357c0889762bd8d64bbdeba"
+  },
+  {
+    "repository": "Systran/faster-whisper-base",
+    "engine": "ctranslate2",
+    "size": 147882941,
+    "id": "ct2-base",
+    "sha256": "d01c3014881c9c6f3133c182f3d2887eb6ca1c789a7538c5c007196857a0a6a9",
+    "multilingual": true,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2309,
+        "sha256": "56a6d8110d311f19c8f0471e562832c7527f146b567275bfca59fcf7c184da9a"
+      },
+      {
+        "name": "model.bin",
+        "size": 145217532,
+        "sha256": "d01c3014881c9c6f3133c182f3d2887eb6ca1c789a7538c5c007196857a0a6a9"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2203239,
+        "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"
+      },
+      {
+        "name": "vocabulary.txt",
+        "size": 459861,
+        "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+      }
+    ],
+    "revision": "ebe41f70d5b6dfa9166e2c581c45c9c0cfc57b66"
+  },
+  {
+    "repository": "Systran/faster-whisper-base.en",
+    "engine": "ctranslate2",
+    "size": 147769510,
+    "id": "ct2-base.en",
+    "sha256": "2a166925539a16005f14ff328359f9b9adb9dc4fb631bb3b227526862e93e2ef",
+    "multilingual": false,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2227,
+        "sha256": "f3bc3821e9fc76a27bae538e11ae5b677dcdd352b4600429ce7951d398569aeb"
+      },
+      {
+        "name": "model.bin",
+        "size": 145216508,
+        "sha256": "2a166925539a16005f14ff328359f9b9adb9dc4fb631bb3b227526862e93e2ef"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2128466,
+        "sha256": "929c5252409436dce1b38a75d1abbcb5e132d170d8e324e4e04ed915fa2d22df"
+      },
+      {
+        "name": "vocabulary.txt",
+        "size": 422309,
+        "sha256": "ff77588746d3a2595d32ab5b69ffd7b95ce2441ac57533cb66fc3eb575a115cf"
+      }
+    ],
+    "revision": "3d3d5dee26484f91867d81cb899cfcf72b96be6c"
+  },
+  {
+    "repository": "Systran/faster-whisper-small",
+    "engine": "ctranslate2",
+    "size": 486212372,
+    "id": "ct2-small",
+    "sha256": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671",
+    "multilingual": true,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2370,
+        "sha256": "b55496ac7940a7ae47d2c01eab40edfd8701feec1229d9cce3b40014383fb828"
+      },
+      {
+        "name": "model.bin",
+        "size": 483546902,
+        "sha256": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2203239,
+        "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"
+      },
+      {
+        "name": "vocabulary.txt",
+        "size": 459861,
+        "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+      }
+    ],
+    "revision": "536b0662742c02347bc0e980a01041f333bce120"
+  },
+  {
+    "repository": "Systran/faster-whisper-small.en",
+    "engine": "ctranslate2",
+    "size": 486098798,
+    "id": "ct2-small.en",
+    "sha256": "62b2a45b05ee59acb4a5341b33ee35e041395d378d418a18acfe4c9e768ee37a",
+    "multilingual": false,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2657,
+        "sha256": "666a9605530ac1f61fa8177f3702b4dacec9966749e42610839fcc32661d5fae"
+      },
+      {
+        "name": "model.bin",
+        "size": 483545366,
+        "sha256": "62b2a45b05ee59acb4a5341b33ee35e041395d378d418a18acfe4c9e768ee37a"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2128466,
+        "sha256": "929c5252409436dce1b38a75d1abbcb5e132d170d8e324e4e04ed915fa2d22df"
+      },
+      {
+        "name": "vocabulary.txt",
+        "size": 422309,
+        "sha256": "ff77588746d3a2595d32ab5b69ffd7b95ce2441ac57533cb66fc3eb575a115cf"
+      }
+    ],
+    "revision": "d1d751a5f8271d482d14ca55d9e2deeebbae577f"
+  },
+  {
+    "repository": "Systran/faster-whisper-medium",
+    "engine": "ctranslate2",
+    "size": 1530571735,
+    "id": "ct2-medium",
+    "sha256": "9b45e1009dcc4ab601eff815b61d80e60ce3fd8c74c1a14f4a282258286b51ae",
+    "multilingual": true,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2257,
+        "sha256": "3622a2ddc41ec0e0fd4e68c13c6830f03b90c38d89aaad184de02c8c642cf807"
+      },
+      {
+        "name": "model.bin",
+        "size": 1527906378,
+        "sha256": "9b45e1009dcc4ab601eff815b61d80e60ce3fd8c74c1a14f4a282258286b51ae"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2203239,
+        "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"
+      },
+      {
+        "name": "vocabulary.txt",
+        "size": 459861,
+        "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+      }
+    ],
+    "revision": "08e178d48790749d25932bbc082711ddcfdfbc4f"
+  },
+  {
+    "repository": "Systran/faster-whisper-medium.en",
+    "engine": "ctranslate2",
+    "size": 1530457748,
+    "id": "ct2-medium.en",
+    "sha256": "11b220779aea4c6f3ce9d2549c8a95ea869ed84066864b999531ef53e594fe5b",
+    "multilingual": false,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2643,
+        "sha256": "4a1848ebabe7938d9797c15a2e8e4ce1d36e6fd4a43d096ae5955257c67c7962"
+      },
+      {
+        "name": "model.bin",
+        "size": 1527904330,
+        "sha256": "11b220779aea4c6f3ce9d2549c8a95ea869ed84066864b999531ef53e594fe5b"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2128466,
+        "sha256": "929c5252409436dce1b38a75d1abbcb5e132d170d8e324e4e04ed915fa2d22df"
+      },
+      {
+        "name": "vocabulary.txt",
+        "size": 422309,
+        "sha256": "ff77588746d3a2595d32ab5b69ffd7b95ce2441ac57533cb66fc3eb575a115cf"
+      }
+    ],
+    "revision": "a29b04bd15381511a9af671baec01072039215e3"
+  },
+  {
+    "repository": "Systran/faster-whisper-large-v1",
+    "engine": "ctranslate2",
+    "size": 3089578414,
+    "id": "ct2-large-v1",
+    "sha256": "a3cce8081a5414206ab09a80aa410ebf9965feef52adafeead13f4a83398b1d1",
+    "multilingual": true,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2352,
+        "sha256": "98eb866f6d98c38224aa2f13fc9854f75fa01280714e945f7e803aa8b16e2b4b"
+      },
+      {
+        "name": "model.bin",
+        "size": 3086912962,
+        "sha256": "a3cce8081a5414206ab09a80aa410ebf9965feef52adafeead13f4a83398b1d1"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2203239,
+        "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"
+      },
+      {
+        "name": "vocabulary.txt",
+        "size": 459861,
+        "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+      }
+    ],
+    "revision": "b07c8d4be0be90092aa01a29c975077acb8d15c9"
+  },
+  {
+    "repository": "Systran/faster-whisper-large-v2",
+    "engine": "ctranslate2",
+    "size": 3089578858,
+    "id": "ct2-large-v2",
+    "sha256": "bf2a9746382e1aa7ffff6b3a0d137ed9edbd9670c3b87e5d35f5e85e70d0333a",
+    "multilingual": true,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2796,
+        "sha256": "d86b7a7664a12559d644aa210a32ce9a7e03913e794b7ea4fb7182de69e273a7"
+      },
+      {
+        "name": "model.bin",
+        "size": 3086912962,
+        "sha256": "bf2a9746382e1aa7ffff6b3a0d137ed9edbd9670c3b87e5d35f5e85e70d0333a"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2203239,
+        "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"
+      },
+      {
+        "name": "vocabulary.txt",
+        "size": 459861,
+        "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+      }
+    ],
+    "revision": "f0fe81560cb8b68660e564f55dd99207059c092e"
+  },
+  {
+    "repository": "Systran/faster-whisper-large-v3",
+    "engine": "ctranslate2",
+    "size": 3090835702,
+    "id": "ct2-large-v3",
+    "sha256": "69f74147e3334731bc3a76048724833325d2ec74642fb52620eda87352e3d4f1",
+    "multilingual": true,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2394,
+        "sha256": "a9306624f5ec14270a014b647e5c316b6e03a662c369758d1b90697a7b0655b9"
+      },
+      {
+        "name": "model.bin",
+        "size": 3087284237,
+        "sha256": "69f74147e3334731bc3a76048724833325d2ec74642fb52620eda87352e3d4f1"
+      },
+      {
+        "name": "preprocessor_config.json",
+        "size": 340,
+        "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2480617,
+        "sha256": "6d8cbd7cd0d8d5815e478dac67b85a26bbe77c1f5e0c6d76d1ce2abc0e5f21ca"
+      },
+      {
+        "name": "vocabulary.json",
+        "size": 1068114,
+        "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1"
+      }
+    ],
+    "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478"
+  },
+  {
+    "repository": "mobiuslabsgmbh/faster-whisper-large-v3-turbo",
+    "engine": "ctranslate2",
+    "size": 1621665983,
+    "id": "ct2-large-v3-turbo",
+    "sha256": "e76620f83d5f5b69efd3d87e3dc180c1bd21df9fbebacfd4335e5e1efcc018da",
+    "multilingual": true,
+    "quantization": "F16",
+    "files": [
+      {
+        "name": "config.json",
+        "size": 2263,
+        "sha256": "b0253ea6c0d3bea6b1e19e91a02acfd3b53f4467362efcb5a3e6b16c9b3a9b7e"
+      },
+      {
+        "name": "model.bin",
+        "size": 1617884929,
+        "sha256": "e76620f83d5f5b69efd3d87e3dc180c1bd21df9fbebacfd4335e5e1efcc018da"
+      },
+      {
+        "name": "preprocessor_config.json",
+        "size": 340,
+        "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711"
+      },
+      {
+        "name": "tokenizer.json",
+        "size": 2710337,
+        "sha256": "297b13372ac43916285644fb9687add3cc62ee2a1adb60da3dc25cc94c1871fd"
+      },
+      {
+        "name": "vocabulary.json",
+        "size": 1068114,
+        "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1"
+      }
+    ],
+    "revision": "0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf"
+  }
+]
