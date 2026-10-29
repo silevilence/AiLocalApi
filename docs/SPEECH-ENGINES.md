@@ -6,6 +6,8 @@
 
 模型页可以按引擎、档位、语言能力和文件量化筛选。tiny/base 较轻，small/medium 提供更大的模型，large-v1/v2/v3 与 large-v3-turbo 提供不同的质量和速度取舍。`.en` 只用于英语；多语言模型可用于中文。turbo 支持多语言转写，但不支持音频翻译为英文；该请求会在入队前被拒绝。
 
+显式粤语代码 `yue` 需要 large-v3 或 large-v3-turbo；较早模型的词表没有该语言 token，请求会在入队前返回 `model_language`。
+
 whisper.cpp 使用 `ggml-*.bin`，保留 tiny 等原有 API 模型 ID。CTranslate2 使用模型包目录，ID 以 `ct2-` 开头，如 `ct2-small`。两者的权重格式不能互换。CTranslate2 的“导入模型包”需要权重、配置、分词器和词表等完整文件；离线运行不会自动补下载缺少的文件。
 
 目录中的每个文件都固定来源修订、大小和 SHA-256。下载可取消、重试并在服务器支持时续传；所有必需文件校验通过后才登记安装。导入只接受目录内的已知文件。模型页展示的是下载大小，实际 RAM/VRAM 取决于引擎、模型及计算精度，不能把文件大小当作内存需求。
@@ -18,6 +20,8 @@ whisper.cpp 使用 `ggml-*.bin`，保留 tiny 等原有 API 模型 ID。CTransla
 | CTranslate2 | CPU、可选 CUDA、auto | default、float32、int8、int8_float32；显式 CUDA 还可选 float16、int8_float16 |
 
 默认发行构建提供 CTranslate2 CPU 运行库，使用 Ruy 后端，不需要 Python。CUDA 构建另需匹配的 CUDA/cuDNN 开发环境，运行时需相应 NVIDIA 驱动和库。当前本地机器没有 NVIDIA 显卡，CUDA 真机尚未验收。CTranslate2 不提供 Vulkan。
+
+固定的 CTranslate2 4.6.0 源码要求 CUDA 至少 11.0、cuDNN 至少 8；这只是上游构建下限，不是本项目已验收的发行组合。具体 CUDA/cuDNN 补丁版本、驱动下限及 GPU 分发包仍待对应硬件验证。
 
 `auto` 尝试 GPU，失败时提示并回退 CPU；显式 CUDA 失败不会静默改用 CPU。运行诊断显示实际引擎、后端和有效计算精度，例如 `int8` 在 CPU 上可能显示为 `int8_float32`。下载文件的存储精度与运行时计算精度是两个不同的属性。
 

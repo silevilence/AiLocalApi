@@ -57,7 +57,8 @@ public sealed class ApplicationService : IAsyncDisposable
             lock (Models.Sync) { model = Models.Require(modelId); reservation = Models.Acquire(model.Id); }
             using (reservation)
             {
-                if (!model.Multilingual && (options.Translate || options.Language is not (null or "en"))) throw new AppException("model_language", "英语专用模型不支持该语言或翻译。");
+                if (!model.SupportsLanguage(options.Language) || !model.Multilingual && options.Translate)
+                    throw new AppException("model_language", options.Language == "yue" ? "粤语 yue 需要 large-v3 或 large-v3-turbo 多语言模型。" : "英语专用模型不支持该语言或翻译。");
                 if (options.Translate && !model.SupportsTranslation) throw new AppException("model_translation", "该模型不支持翻译成英文，请选择非 turbo 的多语言模型。");
                 var settings = Store.Settings;
                 var selectedBackend = model.Engine == InferenceEngines.CTranslate2 ? settings.CTranslateBackend : settings.Backend;

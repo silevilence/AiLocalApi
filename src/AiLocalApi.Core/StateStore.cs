@@ -7,6 +7,8 @@ public sealed record Settings(string? ModelDirectory = null, string? DefaultMode
 public sealed record ModelInfo(string Id, string Path, string Sha256, long Size, bool Multilingual, string Quantization, string Source, string Engine = InferenceEngines.WhisperCpp)
 {
     public bool SupportsTranslation => Multilingual && !Id.Contains("turbo", StringComparison.Ordinal);
+    public bool SupportsLanguage(string? language) => language is null or "en" ||
+        Multilingual && (language != "yue" || Id.Contains("large-v3", StringComparison.Ordinal));
 }
 public sealed record Job(string Id, string Model, string Input, TranscriptionOptions Options, string State, string Stage, DateTimeOffset Created, DateTimeOffset Updated, int Attempts = 0, string? Error = null, Transcript? Result = null, string Engine = InferenceEngines.WhisperCpp);
 

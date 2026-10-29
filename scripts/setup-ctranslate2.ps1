@@ -22,6 +22,9 @@ if (!(Test-Path -LiteralPath "$source/.git")) {
 if ((& git -C $source rev-parse HEAD) -ne $revision) { throw 'Unexpected CTranslate2 source revision; use a separate source directory.' }
 if (& git -C $source status --porcelain --untracked-files=no) { throw 'CTranslate2 source has local changes.' }
 Invoke-Checked git @('-C', $source, 'submodule', 'update', '--init', '--recursive', '--depth', '1', 'third_party/cpu_features', 'third_party/ruy', 'third_party/spdlog')
+if ($EnableCuda) {
+    Invoke-Checked git @('-C', $source, 'submodule', 'update', '--init', '--recursive', '--depth', '1', 'third_party/thrust', 'third_party/cutlass')
+}
 $cudaFlag = if ($EnableCuda) { 'ON' } else { 'OFF' }
 Invoke-Checked $cmake @('-S', $source, '-B', $build, '-G', 'Visual Studio 17 2022', '-A', 'x64', '-DWITH_MKL=OFF', '-DWITH_RUY=ON', '-DOPENMP_RUNTIME=COMP', '-DBUILD_CLI=OFF', '-DBUILD_TESTS=OFF', '-DBUILD_SHARED_LIBS=ON', '-DCMAKE_CXX_FLAGS=/DWIN32 /D_WINDOWS /W3 /GR /EHsc /utf-8', "-DWITH_CUDA=$cudaFlag", "-DWITH_CUDNN=$cudaFlag")
 Invoke-Checked $cmake @('--build', $build, '--config', 'Release', '--parallel', "$Parallel")
@@ -35,6 +38,11 @@ foreach ($dependency in @('ruy', 'spdlog', 'cpu_features')) {
     if ($license) { Copy-Item -LiteralPath $license.FullName -Destination "$output/$dependency-LICENSE.txt" }
 }
 Copy-Item -LiteralPath "$source/third_party/ruy/third_party/cpuinfo/LICENSE" -Destination "$output/cpuinfo-LICENSE.txt"
+if ($EnableCuda) {
+    Copy-Item -LiteralPath "$source/third_party/thrust/LICENSE" -Destination "$output/thrust-LICENSE.txt"
+    Copy-Item -LiteralPath "$source/third_party/thrust/dependencies/cub/LICENSE.TXT" -Destination "$output/cub-LICENSE.txt"
+    Copy-Item -LiteralPath "$source/third_party/cutlass/LICENSE.txt" -Destination "$output/cutlass-LICENSE.txt"
+}
 foreach ($header in @('avx_mathfun.h', 'avx512_mathfun.h', 'neon_mathfun.h', 'BS_thread_pool_light.hpp')) {
     Copy-Item -LiteralPath "$source/third_party/$header" -Destination "$output/$header-LICENSE.txt"
 }
