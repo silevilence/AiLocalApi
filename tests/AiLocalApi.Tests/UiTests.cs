@@ -22,6 +22,22 @@ public static class TestAppBuilder
 
 public class UiTests
 {
+    [AvaloniaFact] public async Task ModelFiltersAndPrecisionChoicesExcludeInvalidCombinations()
+    {
+        await using var service = new ApplicationService(Paths()); await using var host = new ApiHost(service);
+        var model = new MainViewModel(service, host); await model.RefreshAsync();
+        model.ModelEngine = "ctranslate2";
+        for (var i = 0; i < 100 && model.Models.Any(m => !m.Id.StartsWith("ct2-")); i++) { await Task.Delay(10); await model.RefreshAsync(); }
+        Assert.Equal(12, model.Models.Count);
+        model.ModelQuantization = "Q5_0";
+        for (var i = 0; i < 100 && model.HasModels; i++) { await Task.Delay(10); await model.RefreshAsync(); }
+        Assert.False(model.HasModels); Assert.False(model.CanDownload);
+        model.CTranslateBackend = "cuda"; model.CTranslateComputeType = "float16";
+        model.CTranslateBackend = "cpu";
+        Assert.Equal("default", model.CTranslateComputeType);
+        Assert.DoesNotContain("float16", model.CTranslateComputeTypes);
+        Assert.DoesNotContain("vulkan", model.CTranslateBackends);
+    }
     private static AppPaths Paths() => new(Path.Combine(Path.GetTempPath(), "AiLocalApi-tests", Guid.NewGuid().ToString("N")));
 
     [AvaloniaTheory]

@@ -65,7 +65,7 @@ public partial class MainViewModel : ObservableObject
     public bool CanDeleteModel => CanUseModel && service.LoadedModel != SelectedModel?.Id;
     [ObservableProperty] private bool canUnload;
     partial void OnPausedChanged(bool value) => OnPropertyChanged(nameof(PauseLabel));
-    partial void OnSelectedModelChanged(ModelRow? value) => NotifyActions();
+    partial void OnSelectedModelChanged(ModelRow? value) { NotifyActions(); OnPropertyChanged(nameof(SelectedModelDetails)); }
     private void NotifyActions()
     {
         foreach (var name in new[] { nameof(CanCancelJob), nameof(CanRetryJob), nameof(CanExport), nameof(CanUseModel), nameof(CanDownload), nameof(CanCancelDownload), nameof(CanDeleteModel), nameof(CanUnload), nameof(ApiExample), nameof(PauseLabel) }) OnPropertyChanged(name);
@@ -81,7 +81,7 @@ public partial class MainViewModel : ObservableObject
     {
         this.service = service; this.api = api;
         var settings = service.Store.Settings;
-        DownloadHost = settings.DownloadHost; Message = settings.DefaultModel is null ? "先选择模型目录，再下载或导入模型。" : "选择音频开始转写，或查看已有任务。"; ModelDirectory = settings.ModelDirectory ?? ""; Backend = settings.Backend; Port = settings.Port; IdleSeconds = settings.IdleSeconds; KeepLoaded = settings.KeepLoaded; RetentionDays = settings.RetentionDays; AutoStart = LoginStartup.Enabled; Paused = service.Paused;
+        CTranslateBackend = settings.CTranslateBackend; CTranslateComputeType = settings.CTranslateComputeType; DownloadHost = settings.DownloadHost; Message = settings.DefaultModel is null ? "先选择模型目录，再下载或导入模型。" : "选择音频开始转写，或查看已有任务。"; ModelDirectory = settings.ModelDirectory ?? ""; Backend = settings.Backend; Port = settings.Port; IdleSeconds = settings.IdleSeconds; KeepLoaded = settings.KeepLoaded; RetentionDays = settings.RetentionDays; AutoStart = LoginStartup.Enabled; Paused = service.Paused;
     }
     public async Task RefreshAsync()
     {
@@ -90,27 +90,27 @@ public partial class MainViewModel : ObservableObject
         {
             OnPropertyChanged(nameof(ReleaseInfo));
             OnPropertyChanged(nameof(CanUpdate));
-            Status = $"{api.Status} · {(service.Paused ? "暂停接单" : "接受任务")} · 后端 {Localize(service.Worker.Backend)} · 模型 {Localize(service.ModelState)}";
+            Status = $"{api.Status} · {(service.Paused ? "暂停接单" : "接受任务")} · {service.Worker.Engine} / {Localize(service.Worker.Backend)} · 模型 {Localize(service.ModelState)}";
             BackendDetails = $"{service.Worker.BackendDetails}\n{service.LastError}".Trim(); Paused = service.Paused;
-            var snapshot = $"{service.Store.Revision}/{service.LoadedModel}/{service.Worker.ProcessId}/{page}/{string.Join(';', service.Models.Progress.Values)}";
+            var snapshot = $"{ModelEngine}/{ModelTier}/{ModelLanguage}/{ModelQuantization}/{service.Store.Revision}/{service.LoadedModel}/{service.Worker.ProcessId}/{page}/{string.Join(';', service.Models.Progress.Values)}";
             NotifyActions();
             OnPropertyChanged(nameof(LiveEndpoint));
             if (lastSnapshot == snapshot) return;
             var data = await Task.Run(() =>
             {
                 var installed = service.Models.Installed;
-                var models = ModelManager.Catalog.Select(model => new ModelRow(model.Id, $"{(model.Multilingual ? "多语言 / 英文翻译" : "仅英语")} · {model.Quantization} · {model.Size / 1048576d:F1} MB", service.Models.Progress.TryGetValue(model.Id, out var progress) && progress.State != "available" ? $"{Localize(progress.State)} · {progress.Received / 1048576d:F1} MB {progress.Error}" : installed.Any(item => item.Id == model.Id) ? $"已安装{(service.Store.Settings.DefaultModel == model.Id ? " · 默认" : "")}{(service.LoadedModel == model.Id ? " · 驻留" : "")}" : "可下载", installed.Any(item => item.Id == model.Id), progress?.State is "connecting" or "downloading" or "verifying")).ToArray();
+                var models = ModelManager.Catalog.Where(MatchesFilter).OrderBy(model => model.IsBundle).ThenBy(model => Array.IndexOf(ModelTiers, model.Tier.Replace(".en", ""))).ThenBy(model => model.Quantization != "F16").ThenBy(model => !model.Multilingual).Select(model => new ModelRow(model.Id, $"{model.Engine} · {(model.Multilingual ? "多语言" : "仅英语")} · {(model.SupportsTranslation ? "可翻译为英文" : "仅转写")} · {model.Quantization} · {model.Size / 1048576d:F1} MiB", service.Models.Progress.TryGetValue(model.Id, out var progress) && progress.State != "available" ? $"{Localize(progress.State)} · {progress.Received / 1048576d:F1} MB {progress.Error}" : installed.Any(item => item.Id == model.Id) ? $"已安装{(service.Store.Settings.DefaultModel == model.Id ? " · 默认" : "")}{(service.LoadedModel == model.Id ? " · 驻留" : "")}" : "可下载", installed.Any(item => item.Id == model.Id), progress?.State is "connecting" or "downloading" or "verifying")).ToArray();
                 return (CanUnload: service.Worker.ProcessId is not null && service.Store.Count("running") == 0, AllowAnonymous: service.Store.AllowAnonymous, Total: service.Store.TotalJobs(), Keys: service.Store.ApiKeys(), Models: models, Jobs: service.Store.Jobs(page).Select(job => new JobRow(job.Id, $"{job.Created.LocalDateTime:MM-dd HH:mm} · {job.Model}", job.State, job.Stage)).ToArray());
             });
             if (!Models.SequenceEqual(data.Models)) { var id = SelectedModel?.Id; Models.Clear(); foreach (var model in data.Models) Models.Add(model); SelectedModel = Models.FirstOrDefault(model => model.Id == id) ?? Models.FirstOrDefault(); }
             if (!Jobs.SequenceEqual(data.Jobs)) { var id = SelectedJob?.Id; Jobs.Clear(); foreach (var job in data.Jobs) Jobs.Add(job); SelectedJob = Jobs.FirstOrDefault(job => job.Id == id); }
-            HasJobs = data.Jobs.Length > 0; CanPrevious = page > 0; CanNext = (page + 1) * 50 < data.Total;
+            HasModels = data.Models.Length > 0; HasJobs = data.Jobs.Length > 0; CanPrevious = page > 0; CanNext = (page + 1) * 50 < data.Total;
             PageLabel = $"第 {page + 1} 页 · 共 {data.Total} 项";
             CanUnload = data.CanUnload;
             UpdateKeys(data.Keys, data.AllowAnonymous);
             lastSnapshot = snapshot;
             NotifyActions();
-            Status = $"{api.Status} · {(service.Paused ? "暂停接单" : "接受任务")} · 后端 {Localize(service.Worker.Backend)} · 模型 {Localize(service.ModelState)}";
+            Status = $"{api.Status} · {(service.Paused ? "暂停接单" : "接受任务")} · {service.Worker.Engine} / {Localize(service.Worker.Backend)} · 模型 {Localize(service.ModelState)}";
             BackendDetails = $"{service.Worker.BackendDetails}\n{service.LastError}".Trim();
             Paused = service.Paused;
         }
@@ -164,7 +164,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand] private async Task SaveSettings() => await Run(() => Task.Run(() =>
     {
         if (Backend != service.Store.Settings.Backend && (service.Store.Count("queued") + service.Store.Count("running") > 0)) throw new AppException("busy", "请等待在途任务结束后切换后端。");
-        service.Store.SaveSettings(service.Store.Settings with { DownloadHost = DownloadHost, Port = (int)Port, IdleSeconds = (int)IdleSeconds, KeepLoaded = KeepLoaded, Backend = Backend, RetentionDays = (int)RetentionDays });
+        service.Store.SaveSettings(service.Store.Settings with { DownloadHost = DownloadHost, Port = (int)Port, IdleSeconds = (int)IdleSeconds, KeepLoaded = KeepLoaded, Backend = Backend, CTranslateBackend = CTranslateBackend, CTranslateComputeType = CTranslateComputeType, RetentionDays = (int)RetentionDays });
         LoginStartup.Set(AutoStart);
     }), "设置已保存。若端口尚未应用，请点击“应用端口并重启 API”；后端在下次加载模型时生效。");
     [RelayCommand] private void TogglePause() { service.Paused = !service.Paused; Paused = service.Paused; }

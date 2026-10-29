@@ -30,11 +30,18 @@
         </Grid>
       </TabItem>
       <TabItem Header="模型">
-        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16" Margin="0,16,0,0">
+        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10" Margin="0,16,0,0">
           <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12"><StackPanel Spacing="6"><TextBlock Text="模型目录" Classes="label"/><TextBlock Text="{Binding ModelDirectory}" TextWrapping="Wrap"/></StackPanel><Button Grid.Column="1" Content="选择目录" Command="{Binding ChooseDirectoryCommand}"/></Grid>
-          <TextBlock Grid.Row="1" Text="选择目录后才下载模型。所有模型通过固定 SHA-256 校验；已安装文件保留原位置。" Classes="label" TextWrapping="Wrap"/>
-          <ListBox Grid.Row="2" ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel}" Background="White"><ListBox.ItemTemplate><DataTemplate x:DataType="local:ModelRow"><Grid ColumnDefinitions="*,Auto" Margin="10,14"><StackPanel Spacing="8"><TextBlock Text="{Binding Id}" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="{Binding Summary}" Classes="label"/></StackPanel><TextBlock Grid.Column="1" Text="{Binding State}" MaxWidth="330" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="#0F766E"/></Grid></DataTemplate></ListBox.ItemTemplate></ListBox>
-          <WrapPanel Grid.Row="3"><Button Content="下载 / 重试" Command="{Binding DownloadCommand}" IsEnabled="{Binding CanDownload}" Classes="primary" Margin="0,0,8,8"/><Button Content="取消下载" Command="{Binding CancelDownloadCommand}" IsEnabled="{Binding CanCancelDownload}" Margin="0,0,8,8"/><Button Content="导入模型" Command="{Binding ImportCommand}" Margin="0,0,8,8"/><Button Content="设为默认" Command="{Binding SetDefaultCommand}" IsEnabled="{Binding CanUseModel}" Margin="0,0,8,8"/><Button Content="卸载驻留模型" Command="{Binding UnloadCommand}" IsEnabled="{Binding CanUnload}" Margin="0,0,8,8"/><Button Content="删除所选模型" Command="{Binding DeleteModelCommand}" IsEnabled="{Binding CanDeleteModel}" Margin="0,0,8,8"/></WrapPanel>
+          <StackPanel Grid.Row="1" Spacing="8">
+            <WrapPanel><ComboBox ItemsSource="{Binding ModelEngines}" SelectedItem="{Binding ModelEngine}" MinWidth="160" Margin="0,0,8,8" AutomationProperties.Name="筛选推理引擎"/><ComboBox ItemsSource="{Binding ModelTiers}" SelectedItem="{Binding ModelTier}" MinWidth="150" Margin="0,0,8,8" AutomationProperties.Name="筛选模型档位"/><ComboBox ItemsSource="{Binding ModelLanguages}" SelectedItem="{Binding ModelLanguage}" MinWidth="110" Margin="0,0,8,8" AutomationProperties.Name="筛选语言能力"/><ComboBox ItemsSource="{Binding ModelQuantizations}" SelectedItem="{Binding ModelQuantization}" MinWidth="110" Margin="0,0,8,8" AutomationProperties.Name="筛选模型量化"/><Button Content="重置筛选" Command="{Binding ResetModelFiltersCommand}"/></WrapPanel>
+            <TextBlock Text="大小为下载体积，运行内存另计。turbo 仅支持转写；所有文件校验固定 SHA-256。" Classes="label" TextWrapping="Wrap"/>
+            <TextBlock IsVisible="{Binding !HasModels}" Text="没有符合条件的模型，请调整条件或重置筛选。" TextWrapping="Wrap"/>
+          </StackPanel>
+          <ListBox Grid.Row="2" ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel}" Background="White"><ListBox.ItemTemplate><DataTemplate x:DataType="local:ModelRow"><Grid ColumnDefinitions="*,Auto" Margin="10,8"><StackPanel Spacing="5"><TextBlock Text="{Binding Id}" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="{Binding Summary}" Classes="label" TextWrapping="Wrap"/></StackPanel><TextBlock Grid.Column="1" Text="{Binding State}" MaxWidth="330" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="#0F766E"/></Grid></DataTemplate></ListBox.ItemTemplate></ListBox>
+          <StackPanel Grid.Row="3" Spacing="8">
+            <Expander Header="所选模型来源与 API ID" HorizontalAlignment="Stretch"><StackPanel Spacing="6"><TextBlock Text="{Binding SelectedModelDetails}" Classes="label" TextWrapping="Wrap"/><Button Content="复制模型 ID" Command="{Binding CopyModelIdCommand}" HorizontalAlignment="Left"/></StackPanel></Expander>
+            <WrapPanel><Button Content="下载 / 重试" Command="{Binding DownloadCommand}" IsEnabled="{Binding CanDownload}" Classes="primary" Margin="0,0,8,8"/><Button Content="取消下载" Command="{Binding CancelDownloadCommand}" IsEnabled="{Binding CanCancelDownload}" Margin="0,0,8,8"/><Button Content="导入 .bin" Command="{Binding ImportCommand}" Margin="0,0,8,8"/><Button Content="导入模型包" Command="{Binding ImportBundleCommand}" Margin="0,0,8,8"/><Button Content="设为默认" Command="{Binding SetDefaultCommand}" IsEnabled="{Binding CanUseModel}" Margin="0,0,8,8"/><Button Content="卸载模型" Command="{Binding UnloadCommand}" IsEnabled="{Binding CanUnload}" Margin="0,0,8,8"/><Button Content="删除模型" Command="{Binding DeleteModelCommand}" IsEnabled="{Binding CanDeleteModel}" Margin="0,0,8,8"/></WrapPanel>
+          </StackPanel>
         </Grid>
       </TabItem>
       <TabItem Header="设置">
@@ -54,7 +61,7 @@
             </Border>
             <Border Background="White" Padding="18" CornerRadius="8">
               <StackPanel Spacing="10">
-                <TextBlock Text="推理后端" FontSize="18" FontWeight="SemiBold"/>
+                <TextBlock Text="whisper.cpp 推理后端" FontSize="18" FontWeight="SemiBold"/>
                 <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                   <ComboBox ItemsSource="{Binding Backends}" SelectedItem="{Binding Backend}" HorizontalAlignment="Stretch" AutomationProperties.Name="推理后端" IsEnabled="{Binding !TestBackendCommand.IsRunning}"/>
                   <Button Grid.Column="1" Content="测试后端" Command="{Binding TestBackendCommand}"/>
@@ -65,6 +72,13 @@
                 <Expander Header="当前运行诊断" HorizontalAlignment="Stretch"><TextBlock Text="{Binding BackendDetails}" TextWrapping="Wrap" Classes="label"/></Expander>
               </StackPanel>
             </Border>
+            <Border Background="White" Padding="18" CornerRadius="8"><StackPanel Spacing="10">
+              <TextBlock Text="CTranslate2 推理后端" FontSize="18" FontWeight="SemiBold"/>
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="12"><StackPanel Spacing="6"><TextBlock Text="计算设备" Classes="label"/><ComboBox ItemsSource="{Binding CTranslateBackends}" SelectedItem="{Binding CTranslateBackend}" HorizontalAlignment="Stretch" AutomationProperties.Name="CTranslate2 后端" IsEnabled="{Binding !TestCTranslateCommand.IsRunning}"/></StackPanel><StackPanel Grid.Column="1" Spacing="6"><TextBlock Text="运行计算精度" Classes="label"/><ComboBox ItemsSource="{Binding CTranslateComputeTypes}" SelectedItem="{Binding CTranslateComputeType}" HorizontalAlignment="Stretch" AutomationProperties.Name="CTranslate2 计算精度" IsEnabled="{Binding !TestCTranslateCommand.IsRunning}"/></StackPanel></Grid>
+              <WrapPanel><Button Content="测试 CTranslate2" Command="{Binding TestCTranslateCommand}" Margin="0,0,8,0"/><Button Content="取消测试" Command="{Binding TestCTranslateCancelCommand}" IsVisible="{Binding TestCTranslateCommand.IsRunning}"/></WrapPanel>
+              <TextBlock Text="{Binding CTranslateTestResult}" Classes="label" TextWrapping="Wrap"/>
+              <TextBlock Text="计算精度与下载文件精度分别设置；auto 在 CUDA 不可用时提示并回退 CPU。测试后仍需保存设置。" Classes="label" TextWrapping="Wrap"/>
+            </StackPanel></Border>
             <Border Background="White" Padding="18" CornerRadius="8">
               <StackPanel Spacing="10">
                 <TextBlock Text="模型下载源" FontSize="18" FontWeight="SemiBold"/>
@@ -74,7 +88,7 @@
                   <Button Grid.Column="2" Content="取消测试" Command="{Binding TestSourceCancelCommand}" IsVisible="{Binding TestSourceCommand.IsRunning}"/>
                 </Grid>
                 <TextBlock Text="{Binding SourceTestResult}" Classes="label" TextWrapping="Wrap"/>
-                <TextBlock Text="仅下载 ggerganov/whisper.cpp 公开模型；镜像与原站执行相同的大小及 SHA-256 校验，音频始终在本机处理。" Classes="label" TextWrapping="Wrap"/>
+                <TextBlock Text="仅下载固定目录中的 whisper.cpp 和 CTranslate2 模型；镜像与原站执行相同的大小及 SHA-256 校验，音频始终在本机处理。" Classes="label" TextWrapping="Wrap"/>
               </StackPanel>
             </Border>
             <Border Background="White" Padding="18" CornerRadius="8">

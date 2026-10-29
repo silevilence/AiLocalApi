@@ -8,24 +8,23 @@ namespace AiLocalApi.Core;
 
 public static class ConnectionDiagnostics
 {
-    public static async Task<string> TestBackendAsync(ApplicationService service, string backend, CancellationToken token)
+    public static async Task<string> TestBackendAsync(ApplicationService service, string backend, CancellationToken token, string engine = InferenceEngines.WhisperCpp, string computeType = "default")
     {
-        if (backend is not ("cpu" or "auto" or "vulkan" or "cuda")) throw new AppException("invalid_backend", "请选择支持的推理后端。");
-        var model = service.Models.Installed.OrderBy(model => model.Size).FirstOrDefault()
+        if (!InferenceEngines.SupportsBackend(engine, backend) || !InferenceEngines.SupportsComputeType(engine, backend, computeType)) throw new AppException("invalid_backend", "请选择引擎支持的后端与精度。");
+        var model = service.Models.Installed.Where(m => m.Engine == engine).OrderBy(model => model.Size).FirstOrDefault()
             ?? throw new AppException("model_required", "请先在模型页下载或导入一个模型，再测试实际加载能力。");
         using var lease = service.Models.Acquire(model.Id);
-        await using (var file = File.OpenRead(model.Path))
-            if (!Convert.ToHexString(await SHA256.HashDataAsync(file, token)).Equals(model.Sha256, StringComparison.OrdinalIgnoreCase)) throw new AppException("model_corrupt", "测试模型校验失败，请重新导入。");
+        await ModelManager.VerifyAsync(model.Path, ModelManager.Catalog.Single(m => m.Id == model.Id), token);
         await using var worker = new WorkerClient();
         var clock = Stopwatch.StartNew();
         string? fallback = null;
-        try { await worker.SendAsync(new(Guid.NewGuid().ToString("N"), "load", ModelPath: model.Path, Backend: backend), cancellationToken: token); }
+        try { await worker.SendAsync(new(Guid.NewGuid().ToString("N"), "load", ModelPath: model.Path, Backend: backend, Engine: engine, ComputeType: computeType), cancellationToken: token); }
         catch (Exception error) when (backend == "auto" && !token.IsCancellationRequested)
         {
             fallback = error.Message; await worker.DisposeAsync();
-            await worker.SendAsync(new(Guid.NewGuid().ToString("N"), "load", ModelPath: model.Path, Backend: "cpu"), cancellationToken: token);
+            await worker.SendAsync(new(Guid.NewGuid().ToString("N"), "load", ModelPath: model.Path, Backend: "cpu", Engine: engine, ComputeType: computeType), cancellationToken: token);
         }
-        return $"可用 · 实际后端 {worker.Backend} · 模型 {model.Id} · {clock.Elapsed.TotalSeconds:F1} 秒\n{worker.BackendDetails}{(fallback is null ? "" : "\n自动回退 CPU：" + fallback)}";
+        return $"可用 · {worker.Engine} · 实际后端 {worker.Backend} · 精度 {worker.ComputeType} · 模型 {model.Id} · {clock.Elapsed.TotalSeconds:F1} 秒\n{worker.BackendDetails}{(fallback is null ? "" : "\n自动回退 CPU：" + fallback)}";
     }
 
     public static async Task<string> TestSourceAsync(string host, CancellationToken token, HttpClient? client = null)
