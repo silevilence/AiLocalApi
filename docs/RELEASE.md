@@ -65,6 +65,8 @@ SDK API 与打包参数依据 [Velopack Setup 参数](https://docs.velopack.io/r
 
 发布准备时执行 `generate-changelog` 技能，更新 `changelog.md` 和公共 `Directory.Build.props/Version`，提交后推送对应的 `vX.Y.Z` 标签。只有版本标签触发 `.github/workflows/release.yml`；普通开发提交不发布。
 
+发行工作流固定使用 `windows-2022`，与原生依赖要求的 Visual Studio 2022 一致。若标签发布因工作流环境问题失败，修复默认分支的工作流后可使用 `workflow_dispatch`，填入原有 `vX.Y.Z` 标签重试。重试检出标签对应源码，将实际检出的提交传入发布校验，不移动标签，也不使用默认分支源码冒充该版本。
+
 Windows runner 复用上述测试、发布和打包脚本，执行真实模型的 CPU 转写、复用与卸载。构建作业只有 contents:read；独立发布作业使用 contents:write，在草稿中上传并校验全部四项资产的服务器 SHA-256 后公开。重复执行相同已发布标签时核对提交、正文和完整资产后跳过，不覆盖公开内容；失败的同提交草稿可以重试。首期始终提供完整更新包，不依赖增量包或旧版本存在。
 
 Release 正文与 Velopack 更新说明都由 `release-notes.ps1` 提取对应章节，Actions 不运行本机技能，也不自动生成另一份说明。可选签名通过 `pack.ps1` 参数接入，默认构建未签名。当前正式构建携带 CPU/Vulkan 库；CUDA 需另行启用 CUDA 构建依赖并在 NVIDIA 硬件上验收。
