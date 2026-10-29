@@ -24,6 +24,14 @@ dotnet restore AiLocalApi.slnx --locked-mode
 
 用户下载 `AiLocalApi-<版本>-win-x64-Setup.exe` 或 `AiLocalApi-win-Portable.zip`。前者是 NSIS 引导，内嵌的 `AiLocalApi-win-Setup.exe` 只作为中间载荷；后者是 Velopack 真正的便携布局，包含 `.portable`、`AiLocalApi.exe`、`Update.exe` 和 `current/`。完整 `nupkg` 与 `releases.win.json` 用于更新。`assets.json` 记录对外资产的大小与 SHA-256。可选 `-SignTemplate` 接入外部签名工具，不把证书或凭据保存进仓库。
 
+## 发行布局与体积
+
+发行目录中的桌面程序与 Worker 共用一份自包含 .NET 运行时，但仍作为独立进程运行。`AiLocalApi.Worker.exe`、它自己的 `.deps.json` / `.runtimeconfig.json` 与桌面程序并列；合并发布输出时仅允许哈希完全相同的同名文件，不同依赖版本会使构建失败。开发构建仍兼容 `worker/` 子目录，`AILOCAL_WORKER` 覆盖路径继续有效。
+
+发行仅保留 Windows x64 推理库；FFmpeg 保留音频解码实际依赖的 `avcodec`、`avformat`、`avutil`、`swresample` 四个共享库及许可证。`check-assets.ps1` 检查便携包布局、唯一 .NET 运行时及这些依赖，拒绝重复 Worker 目录、其他架构库和多余 FFmpeg 库。`publish-sandbox.ps1` 复用相同发布入口，确保干净环境验证与正式包布局一致。
+
+2026-10-29 本地打包对比：安装包从正式 V0.2.0 的 207.6 MiB 降至 137.7 MiB，便携包从 200.3 MiB 降至 130.4 MiB，展开后从 490.0 MiB 降至 314.5 MiB。49 项测试、多格式转写、CPU/Vulkan 及无系统 .NET 的 Sandbox 安装版/便携版/API 验证通过，见[体积与验收记录](verification/package-slim-2026-10-29.json)。优化包仅用于本地验证，未发布；旧布局到新布局的自动升级仍需在下次发布前复验。
+
 ## 数据、自启与更新
 
 安装版首次运行显示数据目录选择窗口，数据必须放在安装目录外；模型仍需明确选择或导入才会下载。绿色版默认保存到发行根目录 `Data/`，不在可替换的 `current/` 内。每个副本的 `instance.json` 保存数据位置和自启标识；绿色版移动后在启动调度前备份数据库，并以事务重定位原数据目录内部的模型、输入路径，外部目录不改动。

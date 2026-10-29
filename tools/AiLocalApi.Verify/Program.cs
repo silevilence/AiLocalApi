@@ -32,7 +32,7 @@ if (args.Length < 3) { Console.Error.WriteLine("Usage: Verify <data-dir> <model-
 var paths = new AppPaths(Path.GetFullPath(args[0]));
 await using var service = new ApplicationService(paths);
 service.Models.SetDirectory(args.Contains("--copy-model") ? Path.Combine(paths.Data, "models") : Path.GetFullPath(args[1]));
-if (Environment.GetEnvironmentVariable("AILOCAL_WORKER") is null) Environment.SetEnvironmentVariable("AILOCAL_WORKER", Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../app/worker/AiLocalApi.Worker.exe")));
+if (Environment.GetEnvironmentVariable("AILOCAL_WORKER") is null) Environment.SetEnvironmentVariable("AILOCAL_WORKER", Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../app/AiLocalApi.Worker.exe")));
 service.Store.SaveSettings(service.Store.Settings with { Backend = args.ElementAtOrDefault(3) is "cpu" or "vulkan" or "cuda" or "auto" ? args[3] : "cpu", IdleSeconds = 2 });
 var clock = Stopwatch.StartNew();
 if (args.Contains("--download"))

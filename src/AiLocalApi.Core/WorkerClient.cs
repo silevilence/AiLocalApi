@@ -61,7 +61,9 @@ public sealed class WorkerClient : IAsyncDisposable
         Reset();
         var name = $"AiLocalApi-worker-{Guid.NewGuid():N}";
         pipe = new(name, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
-        var executable = Environment.GetEnvironmentVariable("AILOCAL_WORKER") ?? Path.Combine(AppContext.BaseDirectory, "worker", "AiLocalApi.Worker.exe");
+        var adjacentWorker = Path.Combine(AppContext.BaseDirectory, "AiLocalApi.Worker.exe");
+        var executable = Environment.GetEnvironmentVariable("AILOCAL_WORKER")
+            ?? (File.Exists(adjacentWorker) ? adjacentWorker : Path.Combine(AppContext.BaseDirectory, "worker", "AiLocalApi.Worker.exe"));
         if (!File.Exists(executable)) throw new AppException("worker_missing", $"Worker not found: {executable}. Run scripts/build.ps1.", 503);
         var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true };
         start.ArgumentList.Add(name); start.ArgumentList.Add(Environment.ProcessId.ToString());

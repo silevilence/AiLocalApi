@@ -1,0 +1,109 @@
+{
+  "date": "2026-10-29",
+  "baseline": "Published v0.2.0 (6f70839f7e28c43d17a2f9c6328b6c5787d11c59)",
+  "candidate": "Local optimized package using unchanged 0.2.0 version for comparison only; NOT published",
+  "assets": [
+    {
+      "name": "AiLocalApi-0.2.0-win-x64-Setup.exe",
+      "beforeBytes": 217669020,
+      "afterBytes": 144346497,
+      "savedBytes": 73322523,
+      "savedPercent": 33.69,
+      "localTestSha256": "019560A01016B25696283857C95B5D92FAA99FB2ACD5EBC20460A4C25CCFC226"
+    },
+    {
+      "name": "AiLocalApi-win-Portable.zip",
+      "beforeBytes": 210032380,
+      "afterBytes": 136709861,
+      "savedBytes": 73322519,
+      "savedPercent": 34.91,
+      "localTestSha256": "9EEE028AAB8E342A98C1E9CADC2FF3BEECF74DA8FFDCB07A04B9DFD4B4515BD4"
+    },
+    {
+      "name": "AiLocalApi-0.2.0-full.nupkg",
+      "beforeBytes": 210034430,
+      "afterBytes": 136711907,
+      "savedBytes": 73322523,
+      "savedPercent": 34.91,
+      "localTestSha256": "61EAA4AEB2DF317F3C6E7E8CFF9C9869BE1F458B1F4A78334C9B6014E5444047"
+    },
+    {
+      "name": "releases.win.json",
+      "beforeBytes": 2382,
+      "afterBytes": 2382,
+      "savedBytes": 0,
+      "savedPercent": 0.0,
+      "localTestSha256": "5C913D674432E8535683069E23142D799D7502B9191AC41959D6B312A263BAC0"
+    }
+  ],
+  "portableExpandedBytes": {
+    "before": 513813947,
+    "after": 329790108
+  },
+  "unitTests": {
+    "passed": 49,
+    "failed": 0
+  },
+  "publishMergeTest": "passed: duplicate identity, conflict rejection before copying, x64 CPU/Vulkan filtering, overlapping directory rejection",
+  "checks": {
+    "cpuFormatsLifecycle": [
+      "PASS: inference, model reuse, idle unload and Worker release",
+      "PASS: mp3, duration=11.016s",
+      "PASS: m4a, duration=11.008s",
+      "PASS: flac, duration=11.040s",
+      "PASS: ogg, duration=11.000s",
+      "PASS: webm, duration=11.000s",
+      "PASS: mp4, duration=11.008s",
+      "PASS: 44-second audio uses global segment/word offsets",
+      "PASS: queued/running cancellation, busy unload/delete, retry, Worker crash recovery, corrupt input isolation"
+    ],
+    "ctranslate2Cpu": [
+      "PASS: CPU transcription, detection, prompt, native alignment, reuse and idle release."
+    ],
+    "vulkan": [
+      "PASS: inference, model reuse, idle unload and Worker release"
+    ],
+    "sandboxPortable": [
+      "PASS: startup is opt-in",
+      "PASS: API version=0.2.0",
+      "PASS: mode=绿色版",
+      "PASS: stable launch entry",
+      "PASS: persisted job edaad1e7f34b4791b699b39d6e04c8c4",
+      "PASS: real transcription before update",
+      "PASS: single instance activation",
+      "PASS: graceful exit releases API port"
+    ],
+    "sandboxInstalled": [
+      "PASS: startup is opt-in",
+      "PASS: API version=0.2.0",
+      "PASS: mode=安装版",
+      "PASS: stable launch entry",
+      "PASS: persisted job be553956590a4847b0ca5203d8127125",
+      "PASS: real transcription before update",
+      "PASS: single instance activation",
+      "PASS: graceful exit releases API port"
+    ],
+    "sandboxHttp": [
+      "PASS: official OpenAI .NET SDK transcription, translation and timestamps",
+      "PASS: HTTP json, application/json; charset=utf-8",
+      "PASS: HTTP text, text/plain; charset=utf-8",
+      "PASS: HTTP srt, application/x-subrip; charset=utf-8",
+      "PASS: HTTP vtt, text/vtt; charset=utf-8",
+      "PASS: HTTP verbose_json, application/json; charset=utf-8",
+      "PASS: authentication, origin rejection, async polling, error structure, single instance",
+      "PASS: host termination, Worker parent lifetime and persisted job recovery",
+      "PASS: graceful host exit and port release"
+    ],
+    "sandboxCTranslate2": [
+      "PASS: CPU transcription, detection, prompt, native alignment, reuse and idle release."
+    ],
+    "sandboxNoDotnet": [
+      "PASS: no system .NET installation"
+    ]
+  },
+  "limits": [
+    "No new version, release or tag created.",
+    "Upgrade between old and new package layouts was not rerun in this check.",
+    "CUDA hardware remains unverified."
+  ]
+}
