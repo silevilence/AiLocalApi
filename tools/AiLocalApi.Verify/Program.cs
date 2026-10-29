@@ -11,6 +11,15 @@ if (reportIndex >= 0)
     AppDomain.CurrentDomain.UnhandledException += (_, e) => { Console.Error.WriteLine(e.ExceptionObject); output.Flush(); };
 }
 if (args.Length >= 7 && args[0] == "--release") { await ReleaseRegression.RunAsync(args); return 0; }
+if (args.Length >= 4 && args[0] == "--catalog") { await CatalogRegression.RunAsync(args[1], args[2], args[3]); return 0; }
+if (args.Length >= 4 && args[0] == "--bundle-catalog") { await CatalogRegression.RunAsync(args[1], args[2], args[3], true); return 0; }
+if (args.Length >= 5 && args[0] == "--engine") { await EngineRegression.RunAsync(args[1], args[2], args[3], args[4]); return 0; }
+if (args.Length >= 4 && args[0] == "--dual-suite") { await EngineRegression.SuiteAsync(args[1], args[2], args[3]); return 0; }
+if (args.Length >= 4 && args[0] == "--benchmark") { await EngineRegression.BenchmarkAsync(args[1], args[2], args[3]); return 0; }
+if (args.Length >= 3 && args[0] == "--bundle-failures") { await BundleRegression.RunAsync(args[1], args[2]); return 0; }
+if (args.Length >= 4 && args[0] == "--disk-full") { await BundleRegression.DiskFullAsync(args[1], args[2], args[3]); return 0; }
+if (args.Length >= 5 && args[0] == "--worker-failures") { await EngineRegression.FailurePathsAsync(args[1], args[2], args[3], args[4]); return 0; }
+if (args.Length >= 5 && args[0] == "--multilingual-engine") { await EngineRegression.LanguagesAsync(args[1], args[2], args[3], args[4]); return 0; }
 if (args.Length >= 4 && args[0] == "--http") { await HttpRegression.RunAsync(args[1], args[2], args[3], args.Contains("--lock")); return 0; }
 if (args.Length >= 1 && args[0] == "--sandbox-drive")
 {
