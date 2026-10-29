@@ -8,16 +8,24 @@ namespace AiLocalApi.Worker;
 internal sealed class InferenceEngine : IDisposable
 {
     private WhisperFactory? factory;
+    private CTranslateInferenceEngine? ctranslate;
     private string? loadedPath;
     private string? requestedBackend;
     private readonly List<string> diagnostics = [];
     private readonly IDisposable logger;
     public InferenceEngine() => logger = LogProvider.AddLogger((_, line) => { if (line is not null && (line.Contains("ggml_vulkan:") || line.Contains("ggml_cuda:") || line.Contains("using device"))) lock (diagnostics) { if (diagnostics.Count < 32) diagnostics.Add(line.Trim()); } });
-    public string BackendDetails { get { lock (diagnostics) return string.Join("\n", diagnostics); } }
-    public int LoadCount { get; private set; }
-    public string Backend => RuntimeOptions.LoadedLibrary?.ToString().ToLowerInvariant() ?? "not loaded";
-    public void Load(string path, string backend)
+    public string Engine { get; private set; } = InferenceEngines.WhisperCpp;
+    public string ComputeType => ctranslate?.ComputeType ?? "default";
+    public string BackendDetails { get { if (ctranslate is not null) return ctranslate.BackendDetails; lock (diagnostics) return string.Join("\n", diagnostics); } }
+    private int whisperLoadCount;
+    public int LoadCount => ctranslate?.LoadCount ?? whisperLoadCount;
+    public string Backend => ctranslate?.Backend ?? RuntimeOptions.LoadedLibrary?.ToString().ToLowerInvariant() ?? "not loaded";
+    public void Load(string path, string backend, string engine = InferenceEngines.WhisperCpp, string computeType = "default")
     {
+        if (!InferenceEngines.SupportsBackend(engine, backend) || !InferenceEngines.SupportsComputeType(engine, backend, computeType)) throw new ArgumentException("Unsupported engine/backend/precision combination.");
+        if ((factory is not null || ctranslate is not null) && Engine != engine) throw new InvalidOperationException("Engine changed; restart Worker first.");
+        Engine = engine;
+        if (engine == InferenceEngines.CTranslate2) { ctranslate ??= new(); ctranslate.Load(path, backend, computeType); return; }
         if (factory is not null && path == loadedPath && backend == requestedBackend) return;
         if (requestedBackend is not null && requestedBackend != backend) throw new InvalidOperationException("Backend changed; restart Worker first.");
         Unload(); requestedBackend = backend;
@@ -39,10 +47,11 @@ internal sealed class InferenceEngine : IDisposable
             }
         }
         catch (Exception error) { throw new InvalidOperationException($"无法初始化 {backend} 后端。CPU 需要 MSVC CRT/OpenMP；Vulkan 需要显卡驱动；CUDA 需要匹配的 NVIDIA 驱动及启用 CUDA 的构建。{error.Message}", error); }
-        loadedPath = path; LoadCount++;
+        loadedPath = path; whisperLoadCount++;
     }
     public async Task<Transcript> TranscribeAsync(string audio, TranscriptionOptions options, int maxSeconds, Func<string, Task> progress, CancellationToken token)
     {
+        if (ctranslate is not null) return await ctranslate.TranscribeAsync(audio, options, maxSeconds, progress, token);
         if (factory is null) throw new InvalidOperationException("Model is not loaded.");
         var alignment = options.Words ? new WordAlignment(loadedPath!) : null;
         var pcm = audio + ".pcm";
@@ -80,6 +89,6 @@ internal sealed class InferenceEngine : IDisposable
         }
         finally { if (File.Exists(pcm)) File.Delete(pcm); }
     }
-    public void Unload() { factory?.Dispose(); factory = null; loadedPath = null; }
+    public void Unload() { ctranslate?.Dispose(); ctranslate = null; factory?.Dispose(); factory = null; loadedPath = null; }
     public void Dispose() { Unload(); logger.Dispose(); }
 }

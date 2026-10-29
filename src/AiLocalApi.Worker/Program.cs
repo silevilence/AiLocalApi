@@ -35,14 +35,14 @@ while (await reader.ReadLineAsync() is { } line)
         switch (request.Command)
         {
             case "ping": break;
-            case "load": engine.Load(request.ModelPath!, request.Backend); break;
+            case "load": engine.Load(request.ModelPath!, request.Backend, request.Engine, request.ComputeType); break;
             case "transcribe":
-                await Progress("loading"); engine.Load(request.ModelPath!, request.Backend);
+                await Progress("loading"); engine.Load(request.ModelPath!, request.Backend, request.Engine, request.ComputeType);
                 result = await engine.TranscribeAsync(request.AudioPath!, request.Options ?? new(), request.MaxDurationSeconds, Progress, token); break;
             case "unload": case "exit": engine.Unload(); break;
             default: throw new InvalidOperationException("Unknown Worker command.");
         }
-        final = new WorkerReply(request.Id, "done", Result: result, Backend: engine.Backend, LoadCount: engine.LoadCount, BackendDetails: engine.BackendDetails);
+        final = new WorkerReply(request.Id, "done", Result: result, Backend: engine.Backend, LoadCount: engine.LoadCount, BackendDetails: engine.BackendDetails, Engine: engine.Engine, ComputeType: engine.ComputeType);
     }
     catch (Exception error)
     {

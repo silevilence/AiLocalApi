@@ -37,10 +37,14 @@ internal sealed class WordAlignment
         }
         var text = new UTF8Encoding(false, true).GetString(bytes.ToArray());
         if (text.Trim() != segment.Text.Trim()) throw new InvalidDataException("Cannot align token bytes to segment text.");
+        return AlignBytes(text, tokens, offset, duration, segment.Language);
+    }
+    internal static Word[] AlignBytes(string text, List<(int Start, int End, long TimeStart, long TimeEnd)> tokens, double offset, double duration, string? language)
+    {
         var memory = Marshal.StringToHGlobalUni(text); IntPtr iterator = IntPtr.Zero;
         try
         {
-            var error = 0; iterator = ubrk_open(1, segment.Language, memory, text.Length, ref error);
+            var error = 0; iterator = ubrk_open(1, language ?? "en", memory, text.Length, ref error);
             if (error > 0 || iterator == IntPtr.Zero) throw new InvalidOperationException("ICU word segmentation unavailable.");
             var result = new List<Word>(); var start = ubrk_first(iterator); int end;
             while ((end = ubrk_next(iterator)) != -1)
